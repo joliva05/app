@@ -75,9 +75,6 @@
     .slate-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.35) !important; }
     html:not(.dark) .slate-input:focus { border-color: rgba(0, 0, 0, 0.3) !important; }
 
-    /* ========================================================
-       GLASSMORPHISM REAL (CABECERA Y DOCK)
-       ======================================================== */
     #bottomNav {
       position: fixed !important;
       bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
@@ -107,7 +104,6 @@
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45) !important;
     }
 
-    /* SELECTOR DE DÍAS */
     html.dark .day-btn:not(.active) { background-color: #1E222A !important; border: 1px solid rgba(255,255,255,0.08) !important; }
     html.dark .day-btn:not(.active) * { color: #94A3B8 !important; }
     html.dark .day-btn.active { background-color: #FFFFFF !important; border-color: #FFFFFF !important; }
@@ -139,7 +135,6 @@
   </style>
 </head>
 <body class="font-sans antialiased min-h-screen select-none pb-60">
-  <!-- OVERLAY Y DRAWER LATERAL -->
   <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0" id="navDrawerOverlay" onclick="toggleNavDrawer(false)"></div>
   <aside class="slate-card fixed top-0 bottom-0 left-0 h-full w-72 max-w-[80vw] z-50 p-5 shadow-2xl flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out border-y-0 border-l-0" id="navDrawerPanel">
     <div class="space-y-6 overflow-y-auto flex-1 pr-1">
@@ -150,10 +145,10 @@
           </div>
           <div>
             <h2 class="text-base font-bold tracking-tight">FitPulse</h2>
-            <p class="text-[11px] opacity-60">Offline-First</p>
+            <p class="text-[11px] opacity-60">Offline-First v3.4</p>
           </div>
         </div>
-        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="toggleNavDrawer(false)" title="Cerrar Drawer">
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="toggleNavDrawer(false)">
           <i class="w-4 h-4" data-lucide="x"></i>
         </button>
       </div>
@@ -191,21 +186,19 @@
           <i class="w-4 h-4 opacity-60 text-purple-500 dark:text-purple-400" data-lucide="upload-cloud"></i>
           <span>Restaurar Copia</span>
         </button>
-        <!-- Input oculto para restaurar -->
         <input type="file" id="importBackupInput" accept=".json" class="hidden" onchange="importBackup(event)">
       </div>
     </div>
     <div class="pt-4 border-t border-[var(--app-border)] flex items-center justify-between text-xs opacity-60">
-      <span>FitPulse · Offline-First v3.0</span>
+      <span>FitPulse · v3.4</span>
       <button class="hover:opacity-100 transition" onclick="toggleNavDrawer(false)">Cerrar</button>
     </div>
   </aside>
 
-  <!-- CABECERA -->
   <header class="sticky top-0 z-40 px-4 py-3" id="topHeader">
     <div class="max-w-md w-full mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <button class="w-10 h-10 rounded-full slate-item flex items-center justify-center hover:opacity-80 active:scale-95 transition" onclick="toggleNavDrawer(true)" title="Menú lateral">
+        <button class="w-10 h-10 rounded-full slate-item flex items-center justify-center hover:opacity-80 active:scale-95 transition" onclick="toggleNavDrawer(true)">
           <i class="w-5 h-5" data-lucide="menu"></i>
         </button>
         <div class="flex items-center space-x-2">
@@ -216,19 +209,17 @@
         </div>
       </div>
       <div class="flex items-center space-x-2.5">
-        <!-- INDICADOR DE SINCRONIZACIÓN -->
         <div id="syncBadge" class="flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-slate-500/10 text-slate-500 border border-slate-500/20 transition-colors">
           <span id="syncDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
           <span id="syncText" class="text-[11px] font-medium hidden sm:inline">Offline</span>
         </div>
-        <button class="w-9 h-9 rounded-full slate-item flex items-center justify-center hover:opacity-80 active:scale-95 transition" onclick="toggleTheme()" title="Modo Claro/Oscuro">
+        <button class="w-9 h-9 rounded-full slate-item flex items-center justify-center hover:opacity-80 active:scale-95 transition" onclick="toggleTheme()">
           <i class="w-4 h-4" data-lucide="sun" id="themeIcon"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- BARRA FLOTANTE DE DESCANSO -->
   <div class="hidden fixed top-16 left-3 right-3 max-w-md mx-auto z-50 slate-card rounded-3xl p-4 shadow-2xl backdrop-blur-xl transition-all" id="restTimerBar">
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-3">
@@ -253,9 +244,7 @@
     </div>
   </div>
 
-  <!-- CONTENEDOR PRINCIPAL -->
   <main class="max-w-md mx-auto px-4 pt-4 pb-36">
-    <!-- ==================== TAB 1: HOY ==================== -->
     <section class="space-y-4" id="tab-hoy">
       <div>
         <h2 class="text-3xl font-bold tracking-tight transition-all" id="mainDashboardTitle">hoy.</h2>
@@ -263,7 +252,6 @@
       </div>
       <div class="grid grid-cols-7 gap-1.5 pt-1" id="weekSelectorContainer"></div>
       
-      <!-- TARJETA ENERGÍA Y CALORÍAS -->
       <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -274,7 +262,7 @@
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs opacity-60">Meta: <strong class="font-semibold opacity-100" id="dashMetaKcalLabel">2400 kcal</strong></span>
-            <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition active:scale-95" id="editCaloriesBtn" onclick="openModalMetas()" title="Editar objetivos">
+            <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition active:scale-95" id="editCaloriesBtn" onclick="openModalMetas()">
               <i class="w-3.5 h-3.5" data-lucide="pencil"></i>
             </button>
           </div>
@@ -322,7 +310,7 @@
           </div>
         </div>
       </div>
-      <!-- TARJETA SERIES DE HOY -->
+
       <div class="slate-card rounded-3xl p-5 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center space-x-2">
@@ -334,7 +322,7 @@
           <span class="text-xs font-medium px-3 py-1 rounded-full slate-item" id="dashSetsCount">0 completadas</span>
         </div>
         <div class="space-y-2 max-h-52 overflow-y-auto pr-1" id="dashSetsList">
-          <div class="text-center py-6 text-xs opacity-60" id="dashSetsEmpty">
+          <div class="text-center py-6 text-xs opacity-60">
             <i class="w-6 h-6 mx-auto mb-1 opacity-40" data-lucide="calendar-x"></i>
             Aún no has registrado series en este día.<br>Ve a la pestaña <strong>Entreno</strong> para comenzar.
           </div>
@@ -346,7 +334,6 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 2: ENTRENO ==================== -->
     <section class="space-y-4 hidden" id="tab-entreno">
       <div class="flex items-center justify-between">
         <div>
@@ -355,18 +342,18 @@
         </div>
         <button class="px-3.5 py-1.5 rounded-full slate-item text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition hover:opacity-80" onclick="openModalGestion()">
           <i class="w-3.5 h-3.5 opacity-60" data-lucide="settings-2"></i>
-          <span>+ Catálogo</span>
+          <span>Gestionar Rutinas</span>
         </button>
       </div>
       <div class="grid grid-cols-2 gap-2" id="routineCardsContainer"></div>
-      <!-- PREVIA DE RUTINA -->
+      
       <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4" id="panelWorkoutPreview">
         <div class="flex items-center justify-between">
           <div>
             <span class="text-[10px] uppercase px-2.5 py-0.5 rounded-full slate-item font-semibold" id="previewRoutineBadge">Rutina Activa</span>
             <h3 class="text-lg font-bold mt-1" id="previewRoutineTitle">Empuje</h3>
           </div>
-          <button class="text-xs px-2.5 py-1 rounded-full slate-item hover:opacity-80 flex items-center gap-1 font-medium transition" onclick="openModalGestion()" title="Editar rutina">
+          <button class="text-xs px-2.5 py-1 rounded-full slate-item hover:opacity-80 flex items-center gap-1 font-medium transition" onclick="openModalGestion()">
             <i class="w-3.5 h-3.5" data-lucide="pencil"></i> Editar
           </button>
         </div>
@@ -378,7 +365,6 @@
         </button>
       </div>
 
-      <!-- PANEL GUIADO DE ENTRENAMIENTO ACTIVO -->
       <div class="slate-card rounded-3xl p-5 shadow-lg space-y-4 hidden !border-emerald-500/50" id="panelActiveWorkoutSession">
         <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
           <div class="flex items-center space-x-2">
@@ -404,7 +390,7 @@
             </div>
             <span class="text-xs font-semibold px-3 py-1 rounded-full btn-primary" id="activeSetBadge">Serie 1 (Meta: 4)</span>
           </div>
-          <div class="flex items-center justify-between p-2.5 px-3 rounded-2xl slate-item text-xs mb-3" id="activeExLastRecordCard">
+          <div class="flex items-center justify-between p-2.5 px-3 rounded-2xl slate-item text-xs mb-3">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center opacity-60">
                 <i class="w-3.5 h-3.5" data-lucide="history"></i>
@@ -416,15 +402,11 @@
           <div class="grid grid-cols-2 gap-3 pt-1">
             <div class="space-y-1">
               <label class="text-[11px] font-semibold opacity-60">Peso (kg)</label>
-              <div class="relative">
-                <input class="w-full slate-input rounded-2xl px-3 py-2.5 text-base font-bold text-center" id="activeInputWeight" step="0.5" type="number" value="60">
-              </div>
+              <input class="w-full slate-input rounded-2xl px-3 py-2.5 text-base font-bold text-center" id="activeInputWeight" step="0.5" type="number" value="60">
             </div>
             <div class="space-y-1">
               <label class="text-[11px] font-semibold opacity-60">Repeticiones</label>
-              <div class="relative">
-                <input class="w-full slate-input rounded-2xl px-3 py-2.5 text-base font-bold text-center" id="activeInputReps" step="1" type="number" value="10">
-              </div>
+              <input class="w-full slate-input rounded-2xl px-3 py-2.5 text-base font-bold text-center" id="activeInputReps" step="1" type="number" value="10">
             </div>
           </div>
           <div class="flex gap-2 pt-2">
@@ -432,7 +414,7 @@
               <i class="w-4 h-4" data-lucide="check"></i>
               <span>Completar Serie</span>
             </button>
-            <button class="px-3.5 py-3 rounded-full slate-item text-xs font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="startRestTimer(90)" title="Iniciar temporizador de descanso">
+            <button class="px-3.5 py-3 rounded-full slate-item text-xs font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="startRestTimer(90)">
               <i class="w-4 h-4" data-lucide="timer"></i>
               <span>90s</span>
             </button>
@@ -441,7 +423,7 @@
             <label class="text-[10px] font-semibold uppercase opacity-60 mb-1.5 block">Series registradas de este ejercicio</label>
             <div class="space-y-1.5" id="activeExerciseSetsHistory"></div>
           </div>
-          <div class="flex gap-2 pt-3 border-t border-[var(--app-border)]" id="navExerciseButtonsContainer">
+          <div class="flex gap-2 pt-3 border-t border-[var(--app-border)]">
             <button class="flex-1 py-2.5 rounded-full slate-item text-xs font-semibold flex items-center justify-center gap-1 hover:opacity-80 active:scale-95 transition" id="btnNavExAnterior" onclick="ejercicioAnterior()">
               <i class="w-3.5 h-3.5" data-lucide="chevron-left"></i>
               <span>Anterior</span>
@@ -459,7 +441,6 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 3: COMIDAS ==================== -->
     <section class="space-y-4 hidden" id="tab-comidas">
       <div class="slate-card rounded-3xl p-4 shadow-sm space-y-2">
         <div class="flex items-center justify-between">
@@ -468,9 +449,7 @@
             <i class="w-3 h-3" data-lucide="settings"></i> Configurar Comidas
           </button>
         </div>
-        <div class="grid grid-cols-4 gap-1 p-1 slate-item border-none rounded-full" id="mealTypeButtonsContainer">
-          <!-- Generado dinámicamente -->
-        </div>
+        <div class="grid grid-cols-4 gap-1 p-1 slate-item border-none rounded-full" id="mealTypeButtonsContainer"></div>
       </div>
       <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
@@ -481,7 +460,7 @@
           </button>
         </div>
         <div class="relative">
-          <input autocomplete="off" class="w-full slate-input rounded-2xl px-4 py-3 text-xs font-medium focus:outline-none" id="foodSearchInput" oninput="onFoodSearchInput(this.value)" placeholder="Buscar alimento (ej. Avena, Pechuga...)" type="text">
+          <input autocomplete="off" class="w-full slate-input rounded-2xl px-4 py-3 text-xs font-medium focus:outline-none" id="foodSearchInput" oninput="onFoodSearchInput(this.value)" placeholder="Buscar alimento..." type="text">
           <div class="hidden absolute left-0 right-0 top-full mt-1 slate-card rounded-2xl shadow-2xl max-h-48 overflow-y-auto z-30" id="foodSuggestions"></div>
         </div>
         <div class="grid grid-cols-12 gap-2 items-center">
@@ -510,14 +489,11 @@
           <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full slate-item" id="totalMealsCount">0 items</span>
         </div>
         <div class="space-y-2 max-h-64 overflow-y-auto pr-1" id="todayMealsList">
-          <div class="text-center py-6 text-xs opacity-60" id="todayMealsEmpty">
-            No hay alimentos registrados en este día.
-          </div>
+          <div class="text-center py-6 text-xs opacity-60">No hay alimentos registrados en este día.</div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== TAB 4: HISTORIAL ==================== -->
     <section class="space-y-4 hidden" id="tab-historial">
       <div>
         <span class="text-[11px] uppercase tracking-wider font-semibold opacity-60">Registro Histórico</span>
@@ -563,7 +539,6 @@
     </section>
   </main>
 
-  <!-- DOCK DE NAVEGACIÓN -->
   <nav class="px-4 py-2 flex items-center justify-between" id="bottomNav">
     <div class="pointer-events-auto w-full grid grid-cols-5 text-center items-center" id="navBottomDock">
       <button class="nav-tab flex flex-col items-center justify-center active:scale-95 transition" id="tabBtnHoy" onclick="switchTab('hoy')">
@@ -579,7 +554,7 @@
         <span class="text-[10px] mt-0.5 opacity-60" id="labelEntreno">Entreno</span>
       </button>
       <div class="flex flex-col items-center justify-center">
-        <button class="w-12 h-12 rounded-full btn-primary shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform" id="btnMainDockAction" onclick="openQuickActionSheet()" title="Acción rápida">
+        <button class="w-12 h-12 rounded-full btn-primary shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform" onclick="openQuickActionSheet()">
           <i class="w-6 h-6 stroke-[2.5]" data-lucide="plus"></i>
         </button>
       </div>
@@ -598,7 +573,6 @@
     </div>
   </nav>
 
-  <!-- MODALES EXISTENTES... (Acción Rápida, Gestión, Alimentos, Config Comidas, Confirmación) -->
   <div class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999]" id="modalAccionRapida" onclick="if(event.target===this)closeQuickActionSheet()">
     <div class="slate-card rounded-3xl p-5 shadow-2xl space-y-3 z-[999999]" id="quickActionCard">
       <div class="flex items-center justify-between pb-2 border-b border-[var(--app-border)]">
@@ -624,6 +598,15 @@
           <div>
             <p class="text-xs font-semibold">Iniciar Entrenamiento</p>
             <p class="subtext text-[11px] opacity-60">Comienza tu rutina diaria guiada</p>
+          </div>
+        </button>
+        <button class="quick-action-item w-full p-3 rounded-2xl slate-item hover:opacity-80 flex items-center gap-3 text-left transition" onclick="closeQuickActionSheet(); openModalGestion();">
+          <div class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+            <i class="w-5 h-5 opacity-80" data-lucide="settings-2"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold">Gestionar Rutinas</p>
+            <p class="subtext text-[11px] opacity-60">Edita tus rutinas y ejercicios</p>
           </div>
         </button>
       </div>
@@ -710,9 +693,7 @@
   <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalGestionAlimentos">
     <div class="slate-card w-full max-w-md rounded-3xl p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
-        <div>
-          <h3 class="text-base font-bold">Catálogo de Alimentos</h3>
-        </div>
+        <div><h3 class="text-base font-bold">Catálogo de Alimentos</h3></div>
         <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalGestionAlimentos()">
           <i class="w-4 h-4" data-lucide="x"></i>
         </button>
@@ -793,9 +774,7 @@
       <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto">
         <i class="w-6 h-6" data-lucide="alert-triangle"></i>
       </div>
-      <div>
-        <h3 class="text-sm font-bold">¿Finalizar entrenamiento?</h3>
-      </div>
+      <div><h3 class="text-sm font-bold">¿Finalizar entrenamiento?</h3></div>
       <div class="grid grid-cols-2 gap-2 pt-1">
         <button class="py-2.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="cerrarConfirmFinalizar()">Volver</button>
         <button class="py-2.5 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition shadow-md" onclick="ejecutarFinEntrenamiento()">Finalizar</button>
@@ -803,7 +782,6 @@
     </div>
   </div>
 
-  <!-- MODAL CONFIGURACIÓN SUPABASE (NUEVO CON VALIDACIÓN SEGURA) -->
   <div class="hidden fixed inset-0 z-[9999999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalSync">
     <div class="slate-card w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
@@ -816,14 +794,14 @@
         </button>
       </div>
       <div class="space-y-3">
-        <p class="text-[11px] opacity-80 leading-relaxed">Conecta tu base de datos privada. La app guardará los datos localmente y los enviará cuando haya conexión, sin interrumpir tu entrenamiento.</p>
+        <p class="text-[11px] opacity-80 leading-relaxed">Conecta tu base de datos privada. Sincroniza comidas, series y rutinas automáticamente.</p>
         <div>
           <label class="block text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Supabase URL</label>
           <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-mono" id="syncUrlInput" placeholder="https://xxxx.supabase.co" type="text"/>
         </div>
         <div>
           <label class="block text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Anon Public Key</label>
-          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-mono" id="syncKeyInput" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6Ikp..." type="password"/>
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-mono" id="syncKeyInput" placeholder="eyJhbGciOiJIUzI1Ni..." type="password"/>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2 pt-3 border-t border-[var(--app-border)]">
@@ -833,10 +811,8 @@
     </div>
   </div>
 
-  <!-- ==================== LÓGICA JAVASCRIPT ==================== -->
   <script>
     let autoReturnTimer = null;
-
     function getTodayStr() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -921,9 +897,6 @@
       } catch(e) {}
     }
 
-    /* ==========================================
-       MOTOR OFFLINE-FIRST (CON VALIDACIÓN SEGURA)
-       ========================================== */
     function openModalSync() {
       document.getElementById('syncUrlInput').value = APP_STATE.sync.url || '';
       document.getElementById('syncKeyInput').value = APP_STATE.sync.key || '';
@@ -936,34 +909,16 @@
     async function saveSyncConfig() {
       const testUrl = document.getElementById('syncUrlInput').value.trim();
       const testKey = document.getElementById('syncKeyInput').value.trim();
-      
-      // Si dejas los campos vacíos, borra la conexión
-      if (!testUrl || !testKey) {
-        APP_STATE.sync.url = '';
-        APP_STATE.sync.key = '';
-        persistData();
-        closeModalSync();
-        updateSyncBadge();
-        return;
-      }
-
-      // Buscamos el botón para ponerlo en modo "cargando"
+      if (!testUrl || !testKey) { APP_STATE.sync.url = ''; APP_STATE.sync.key = ''; persistData(); closeModalSync(); updateSyncBadge(); return; }
       const btn = document.querySelector('button[onclick="saveSyncConfig()"]');
       const originalText = btn ? btn.innerText : 'Guardar y Conectar';
       if (btn) btn.innerText = "Verificando...";
-
       try {
-        // Hacemos un "ping" real a tu tabla de Supabase para ver si nos deja entrar
         const response = await fetch(`${testUrl}/rest/v1/alimentos_base?select=id&limit=1`, {
           method: 'GET',
-          headers: {
-            'apikey': testKey,
-            'Authorization': `Bearer ${testKey}`
-          }
+          headers: { 'apikey': testKey, 'Authorization': `Bearer ${testKey}` }
         });
-
         if (response.ok) {
-          // ¡La llave abre la puerta! Lo guardamos
           APP_STATE.sync.url = testUrl;
           APP_STATE.sync.key = testKey;
           persistData();
@@ -971,14 +926,11 @@
           updateSyncBadge();
           processSyncQueue();
         } else {
-          // Supabase rechaza la clave (Error 401 o 403)
-          alert('⛔ Error de autenticación: La Anon Key es incorrecta o está incompleta.');
+          alert('⛔ Error de autenticación: La Anon Key es incorrecta.');
         }
       } catch(e) {
-        // Fallo de red (Has escrito mal el https:// de la URL o no tienes internet)
-        alert('⛔ Error de conexión: Verifica que la URL de Supabase está bien escrita.');
+        alert('⛔ Error de conexión: Verifica que la URL de Supabase es correcta.');
       }
-      
       if (btn) btn.innerText = originalText;
     }
 
@@ -1001,15 +953,14 @@
         try {
           const response = await fetch(`${APP_STATE.sync.url}/rest/v1/${item.table}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': APP_STATE.sync.key, 'Authorization': `Bearer ${APP_STATE.sync.key}`, 'Prefer': 'return=minimal' },
+            headers: { 'Content-Type': 'application/json', 'apikey': APP_STATE.sync.key, 'Authorization': `Bearer ${APP_STATE.sync.key}`, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
             body: JSON.stringify(item.payload)
           });
-          
-          if (response.ok || response.status === 201) {
+          if (response.ok || response.status === 201 || response.status === 200) {
             APP_STATE.syncQueue = APP_STATE.syncQueue.filter(q => q.id !== item.id);
             persistData();
-          } else { console.error('Error de Supabase:', await response.text()); }
-        } catch(e) { console.error("Fallo de red", e); break; }
+          } else { console.error('Error Supabase:', await response.text()); }
+        } catch(e) { break; }
       }
       APP_STATE.isSyncing = false; updateSyncBadge();
     }
@@ -1027,7 +978,6 @@
         badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20"; dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500"; text.innerText = "Sincronizado";
       }
     }
-    /* ========================================== */
 
     function initTheme() {
       const saved = localStorage.getItem('fitpulse_theme');
@@ -1039,7 +989,7 @@
       APP_STATE.theme = theme; const html = document.documentElement; const icon = document.getElementById('themeIcon');
       if (theme === 'light') { html.classList.remove('dark'); html.classList.add('light'); if (icon) icon.setAttribute('data-lucide', 'moon'); }
       else { html.classList.remove('light'); html.classList.add('dark'); if (icon) icon.setAttribute('data-lucide', 'sun'); }
-      localStorage.setItem('fitpulse_theme', theme); updateDockThemeStyles(); if (window.lucide) lucide.createIcons();
+      localStorage.setItem('fitpulse_theme', theme); if (window.lucide) lucide.createIcons();
     }
 
     function toggleTheme() { applyTheme(APP_STATE.theme === 'dark' ? 'light' : 'dark'); }
@@ -1052,18 +1002,31 @@
     }
 
     function switchTab(tab) {
-      if (APP_STATE.selectedDate && APP_STATE.selectedDate !== getTodayStr()) selectDate(getTodayStr());
       APP_STATE.activeTab = tab;
-      ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => { const sec = document.getElementById(`tab-${t}`); if (t === tab) sec?.classList.remove('hidden'); else sec?.classList.add('hidden'); });
-      updateDockThemeStyles(); if (tab === 'historial') updateHistorialSummary(); if (window.lucide) lucide.createIcons();
+      ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => { 
+        const sec = document.getElementById(`tab-${t}`); 
+        if (t === tab) sec?.classList.remove('hidden'); 
+        else sec?.classList.add('hidden'); 
+      });
+      updateDockThemeStyles();
+      if (tab === 'historial') updateHistorialSummary(); 
+      if (window.lucide) lucide.createIcons();
     }
 
     function updateDockThemeStyles() {
       const tab = APP_STATE.activeTab;
       ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => {
-        const capitalized = t.charAt(0).toUpperCase() + t.slice(1); const pill = document.getElementById(`pill${capitalized}`); const label = document.getElementById(`label${capitalized}`); if (!pill || !label) return;
-        if (t === tab) { pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all btn-primary"; label.className = "text-[10px] mt-0.5 font-bold"; } 
-        else { pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100"; label.className = "text-[10px] mt-0.5 opacity-60"; }
+        const capitalized = t.charAt(0).toUpperCase() + t.slice(1); 
+        const pill = document.getElementById(`pill${capitalized}`); 
+        const label = document.getElementById(`label${capitalized}`); 
+        if (!pill || !label) return;
+        if (t === tab) {
+          pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all btn-primary";
+          label.className = "text-[10px] mt-0.5 font-bold opacity-100";
+        } else {
+          pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100";
+          label.className = "text-[10px] mt-0.5 opacity-60 font-medium";
+        }
       });
     }
 
@@ -1086,7 +1049,12 @@
     }
 
     function selectDate(dateStr) {
-      APP_STATE.selectedDate = dateStr; renderWeekSelector(); updateNutritionDashboard(); renderTodayMeals(); renderSetsDashboard();
+      APP_STATE.selectedDate = dateStr; 
+      renderWeekSelector(); 
+      updateNutritionDashboard(); 
+      renderTodayMeals(); 
+      renderSetsDashboard();
+      
       const titleEl = document.getElementById('mainDashboardTitle'); const subTitleEl = document.getElementById('mainDashboardSubtitle'); const todayStr = getTodayStr();
       if (titleEl) {
         if (dateStr === todayStr) {
@@ -1098,14 +1066,28 @@
           document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados'; document.getElementById('todaySetsSectionTitle').innerText = 'Series Registradas';
         }
       }
-      if (autoReturnTimer) clearTimeout(autoReturnTimer);
-      if (dateStr !== todayStr) autoReturnTimer = setTimeout(() => { selectDate(todayStr); }, 60000);
     }
 
     function openModalMetas() { document.getElementById('goalProteinInput').value = APP_STATE.goals.protein; document.getElementById('goalCarbsInput').value = APP_STATE.goals.carbs; document.getElementById('goalFatInput').value = APP_STATE.goals.fat; calcularKcalDesdeMacros(); document.getElementById('modalMetas').classList.remove('hidden'); if (window.lucide) lucide.createIcons(); }
     function calcularKcalDesdeMacros() { const p = Number(document.getElementById('goalProteinInput').value) || 0; const c = Number(document.getElementById('goalCarbsInput').value) || 0; const f = Number(document.getElementById('goalFatInput').value) || 0; document.getElementById('goalKcalInput').value = Math.round((p * 4) + (c * 4) + (f * 9)); }
     function closeModalMetas() { document.getElementById('modalMetas').classList.add('hidden'); }
-    function saveGoals() { APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 0; APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 0; APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 0; APP_STATE.goals.kcal = Math.round((APP_STATE.goals.protein * 4) + (APP_STATE.goals.carbs * 4) + (APP_STATE.goals.fat * 9)); document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`; document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`; document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`; document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`; document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`; persistData(); closeModalMetas(); updateNutritionDashboard(); }
+
+    function saveGoals() {
+      APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 0;
+      APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 0;
+      APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 0;
+      APP_STATE.goals.kcal = Math.round((APP_STATE.goals.protein * 4) + (APP_STATE.goals.carbs * 4) + (APP_STATE.goals.fat * 9));
+
+      document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`;
+      document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`;
+      document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`;
+      document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`;
+      document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`;
+
+      persistData();
+      closeModalMetas();
+      updateNutritionDashboard();
+    }
 
     function openModalGestionAlimentos() { document.getElementById('modalGestionAlimentos').classList.remove('hidden'); renderGestionAlimentos(); if (window.lucide) lucide.createIcons(); }
     function closeModalGestionAlimentos() { document.getElementById('modalGestionAlimentos').classList.add('hidden'); }
@@ -1121,7 +1103,7 @@
     function guardarConfigComidas() { const inputs = document.querySelectorAll('.meal-type-input'); const nuevos = []; inputs.forEach(inp => { if(inp.value.trim()) nuevos.push(inp.value.trim()); }); if(nuevos.length > 0) { APP_STATE.mealTypes = nuevos; if(!APP_STATE.mealTypes.includes(APP_STATE.currentMealType)) APP_STATE.currentMealType = APP_STATE.mealTypes[0]; persistData(); renderMealTypeButtons(); } closeModalConfigComidas(); }
 
     function renderMealTypeButtons() { const container = document.getElementById('mealTypeButtonsContainer'); if(!container) return; container.style.gridTemplateColumns = `repeat(${Math.min(APP_STATE.mealTypes.length, 4)}, minmax(0, 1fr))`; container.innerHTML = APP_STATE.mealTypes.map(tipo => `<button class="meal-pill py-2 rounded-full text-xs font-semibold text-center transition truncate px-1 ${tipo === APP_STATE.currentMealType ? 'btn-primary shadow' : 'opacity-60 hover:opacity-100'}" onclick="selectMealType('${tipo}', this)">${tipo}</button>`).join(''); }
-    function renderGestionAlimentos() { const box = document.getElementById('listaAlimentosGestion'); if (!box) return; box.innerHTML = APP_STATE.alimentos_base.map((a, idx) => `<div class="p-3 rounded-2xl slate-item flex items-center justify-between text-xs mb-2"><div class="flex-1 pr-2"><h4 class="font-bold">${a.name}</h4><p class="text-[11px] opacity-60 mt-0.5">${a.kcal} kcal | P:${a.prot} C:${a.carb} G:${a.gras} por ${a.baseQty}${a.unit}</p></div><div class="flex items-center gap-1"><button onclick="eliminarAlimentoBase(${idx})" class="p-1.5 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons(); }
+    function renderGestionAlimentos() { const box = document.getElementById('listaAlimentosGestion'); if (!box) return; box.innerHTML = APP_STATE.alimentos_base.map((a, idx) => `<div class="p-3 rounded-2xl slate-item flex items-center justify-between text-xs mb-2"><div class="flex-1 pr-2"><h4 class="font-bold">${a.name}</h4><p class="text-[11px] opacity-60 mt-0.5">${a.kcal} kcal | P:${a.prot} C:${a.carb} G:${a.gras}</p></div><button onclick="eliminarAlimentoBase(${idx})" class="p-1.5 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div>`).join(''); if (window.lucide) lucide.createIcons(); }
     function eliminarAlimentoBase(idx) { if(confirm("¿Eliminar?")) { APP_STATE.alimentos_base.splice(idx, 1); persistData(); renderGestionAlimentos(); } }
     function selectMealType(tipo, btn) { APP_STATE.currentMealType = tipo; const buttons = btn?.parentElement?.querySelectorAll('.meal-pill'); if (buttons) { buttons.forEach(b => { b.className = "meal-pill py-2 rounded-full text-xs font-semibold opacity-60 hover:opacity-100 text-center transition truncate px-1"; }); btn.className = "meal-pill py-2 rounded-full text-xs font-semibold btn-primary shadow text-center transition truncate px-1"; } }
 
@@ -1133,7 +1115,7 @@
     function onFoodSearchInput(val) {
       const query = (val || '').toLowerCase().trim(); const box = document.getElementById('foodSuggestions'); if (!query) { box.classList.add('hidden'); return; }
       const matches = APP_STATE.alimentos_base.filter(a => a.name.toLowerCase().includes(query));
-      if (matches.length === 0) box.innerHTML = `<div class="p-3 text-xs opacity-60 text-center">No encontrado.</div>`; else box.innerHTML = matches.map((m, idx) => `<div class="p-3 text-xs hover:opacity-60 cursor-pointer flex justify-between items-center border-b border-[var(--app-border)]" onclick="selectFoodItemByIndex(${idx})"><div><span class="font-bold block">${m.name}</span><span class="text-[10px] opacity-60">${m.kcal} kcal · P: ${m.prot}g · C: ${m.carb}g · G: ${m.gras}g (${m.baseQty}${m.unit})</span></div><i class="w-3.5 h-3.5 opacity-60" data-lucide="corner-down-left"></i></div>`).join('');
+      if (matches.length === 0) box.innerHTML = `<div class="p-3 text-xs opacity-60 text-center">No encontrado.</div>`; else box.innerHTML = matches.map((m, idx) => `<div class="p-3 text-xs hover:opacity-60 cursor-pointer flex justify-between items-center border-b border-[var(--app-border)]" onclick="selectFoodItemByIndex(${idx})"><div><span class="font-bold block">${m.name}</span><span class="text-[10px] opacity-60">${m.kcal} kcal · P: ${m.prot}g · C: ${m.carb}g · G: ${m.gras}g</span></div><i class="w-3.5 h-3.5 opacity-60" data-lucide="corner-down-left"></i></div>`).join('');
       box.classList.remove('hidden'); if (window.lucide) lucide.createIcons();
     }
 
@@ -1148,14 +1130,13 @@
     }
 
     function registrarComida() {
-      const item = APP_STATE.selectedFood; const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0; if (!item || qty <= 0) { alert('Selecciona un alimento válido y una cantidad.'); return; }
+      const item = APP_STATE.selectedFood; const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0; if (!item || qty <= 0) { alert('Selecciona alimento válido.'); return; }
       const multiplier = item.unit === 'g' ? (qty / 100) : (qty / item.baseQty);
       const meal = { id: Date.now(), name: item.name, meal_type: APP_STATE.currentMealType, qty: qty, unit: APP_STATE.portionUnit, kcal: Math.round(item.kcal * multiplier), prot: Math.round(item.prot * multiplier * 10) / 10, carb: Math.round(item.carb * multiplier * 10) / 10, gras: Math.round(item.gras * multiplier * 10) / 10, date_str: getTodayStr(), time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
       const uiMeal = {...meal, mealType: meal.meal_type, date: meal.date_str, time: meal.time_str};
       APP_STATE.comidas_diarias.push(uiMeal); persistData(); renderTodayMeals(); updateNutritionDashboard();
       addToSyncQueue('comidas_log', meal);
       document.getElementById('foodSearchInput').value = ''; document.getElementById('foodAmountInput').value = '100'; document.getElementById('foodSuggestions').classList.add('hidden'); APP_STATE.selectedFood = null; calculatePreviewMacros();
-      const btn = document.getElementById('btnGuardarComida'); if(btn) { const originalHTML = btn.innerHTML; btn.innerHTML = '<i class="w-4 h-4" data-lucide="check"></i><span>¡Añadido!</span>'; btn.classList.add('bg-emerald-500', 'text-white'); if(window.lucide) lucide.createIcons(); setTimeout(() => { btn.innerHTML = originalHTML; btn.classList.remove('bg-emerald-500', 'text-white'); if(window.lucide) lucide.createIcons(); }, 1500); }
     }
 
     function eliminarComida(id) { APP_STATE.comidas_diarias = APP_STATE.comidas_diarias.filter(m => m.id !== id); persistData(); renderTodayMeals(); updateNutritionDashboard(); }
@@ -1165,7 +1146,7 @@
       const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
       countLabel.innerText = `${filteredMeals.length} items`;
       if (filteredMeals.length === 0) { container.innerHTML = `<div class="text-center py-6 text-xs opacity-60">No hay alimentos registrados en este día.</div>`; return; }
-      container.innerHTML = filteredMeals.map(m => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">${m.mealType[0]}</div><div><h4 class="text-xs font-bold">${m.name}</h4><p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p></div></div><div class="flex items-center gap-2"><div class="text-right"><span class="text-xs font-bold block">${m.kcal} kcal</span><span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span></div><div class="flex flex-col gap-1 border-l border-[var(--app-border)] pl-2 ml-1"><button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1 transition"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div></div></div>`).join(''); if (window.lucide) lucide.createIcons();
+      container.innerHTML = filteredMeals.map(m => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">${m.mealType[0]}</div><div><h4 class="text-xs font-bold">${m.name}</h4><p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p></div></div><div class="flex items-center gap-2"><div class="text-right"><span class="text-xs font-bold block">${m.kcal} kcal</span><span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span></div><button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons();
     }
 
     function updateNutritionDashboard() {
@@ -1201,11 +1182,11 @@
 
     function iniciarOContinuarSesionActiva() { const routine = getCurrentRoutine(); if (!routine || routine.exercises.length === 0) { alert('Selecciona rutina válida.'); return; } APP_STATE.activeSession.isRunning = true; APP_STATE.activeSession.routineId = routine.id; const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex]; APP_STATE.activeSession.currentSetNum = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()))).length + 1; document.getElementById('panelActiveWorkoutSession').classList.remove('hidden'); document.getElementById('btnStartOrResumeWorkoutText').innerText = 'Continuar Entrenamiento'; document.getElementById('activeWorkoutRoutineName').innerText = routine.name; renderActiveExerciseView(); document.getElementById('panelActiveWorkoutSession').scrollIntoView({ behavior: 'smooth' }); }
 
-    function renderActiveExerciseView() { const routine = getCurrentRoutine(); const exIndex = APP_STATE.activeSession.exerciseIndex; const currentEx = routine.exercises[exIndex]; document.getElementById('activeMuscleLabel').innerText = currentEx.muscle || 'Músculo'; document.getElementById('activeExBadge').innerText = currentEx.name; document.getElementById('activeSetBadge').innerText = `Serie ${APP_STATE.activeSession.currentSetNum} (Meta: ${currentEx.targetSets})`; document.getElementById('activeInputWeight').value = currentEx.defaultWeight || 60; document.getElementById('activeInputReps').value = currentEx.defaultReps || 10; renderActiveExerciseSetsHistory(); document.getElementById('btnNavExAnterior').style.display = exIndex === 0 ? 'none' : 'flex'; document.getElementById('btnNavExSiguiente').style.display = exIndex === routine.exercises.length - 1 ? 'none' : 'flex'; try { const r = JSON.parse(localStorage.getItem('fitpulse_exercise_records')||'{}'); const l = r[currentEx.name]; if(l) { document.getElementById('activeExLastRecordText').innerText = `${l.weight} kg × ${l.reps} reps`; if(APP_STATE.activeSession.currentSetNum===1) { document.getElementById('activeInputWeight').value = l.weight; document.getElementById('activeInputReps').value = l.reps; } } else { document.getElementById('activeExLastRecordText').innerText = 'Primera vez en rutina'; } } catch(e){} updateActiveWorkoutProgress(); if (window.lucide) lucide.createIcons(); }
+    function renderActiveExerciseView() { const routine = getCurrentRoutine(); const exIndex = APP_STATE.activeSession.exerciseIndex; const currentEx = routine.exercises[exIndex]; document.getElementById('activeMuscleLabel').innerText = currentEx.muscle || 'Músculo'; document.getElementById('activeExBadge').innerText = currentEx.name; document.getElementById('activeSetBadge').innerText = `Serie ${APP_STATE.activeSession.currentSetNum} (Meta: ${currentEx.targetSets})`; document.getElementById('activeInputWeight').value = currentEx.defaultWeight || 60; document.getElementById('activeInputReps').value = currentEx.defaultReps || 10; renderActiveExerciseSetsHistory(); document.getElementById('btnNavExAnterior').style.display = exIndex === 0 ? 'none' : 'flex'; document.getElementById('btnNavExSiguiente').style.display = exIndex === routine.exercises.length - 1 ? 'none' : 'flex'; updateActiveWorkoutProgress(); if (window.lucide) lucide.createIcons(); }
 
     function eliminarSerieDeSesion(id) { APP_STATE.series_entreno = APP_STATE.series_entreno.filter(s => s.id !== id); APP_STATE.activeSession.setsCompletedInSession = APP_STATE.activeSession.setsCompletedInSession.filter(s => s.id !== id); persistData(); renderActiveExerciseView(); renderSetsDashboard(); }
 
-    function renderActiveExerciseSetsHistory() { const currentEx = getCurrentRoutine().exercises[APP_STATE.activeSession.exerciseIndex]; const sets = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()))); const container = document.getElementById('activeExerciseSetsHistory'); if (sets.length === 0) { container.innerHTML = `<span class="text-xs opacity-60 italic">No hay series completadas aún.</span>`; return; } container.innerHTML = sets.map((s, idx) => `<div class="flex items-center justify-between px-3 py-1.5 rounded-xl slate-item text-xs border-transparent"><span class="font-semibold opacity-80">Serie ${idx + 1}</span><span class="font-bold">${s.weight} kg × ${s.reps} reps</span><div class="flex items-center gap-2"><span class="text-[10px] text-emerald-500 font-bold">✓ Hecha</span><button onclick="eliminarSerieDeSesion(${s.id})" class="p-1 text-red-500 transition"><i class="w-3.5 h-3.5" data-lucide="x"></i></button></div></div>`).join(''); }
+    function renderActiveExerciseSetsHistory() { const currentEx = getCurrentRoutine().exercises[APP_STATE.activeSession.exerciseIndex]; const sets = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()))); const container = document.getElementById('activeExerciseSetsHistory'); if (sets.length === 0) { container.innerHTML = `<span class="text-xs opacity-60 italic">No hay series completadas aún.</span>`; return; } container.innerHTML = sets.map((s, idx) => `<div class="flex items-center justify-between px-3 py-1.5 rounded-xl slate-item text-xs border-transparent"><span class="font-semibold opacity-80">Serie ${idx + 1}</span><span class="font-bold">${s.weight} kg × ${s.reps} reps</span><div class="flex items-center gap-2"><span class="text-[10px] text-emerald-500 font-bold">✓ Hecha</span><button onclick="eliminarSerieDeSesion(${s.id})" class="p-1 text-red-500"><i class="w-3.5 h-3.5" data-lucide="x"></i></button></div></div>`).join(''); }
 
     function completarSerieActiva() {
       const routine = getCurrentRoutine(); const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex]; const weight = parseFloat(document.getElementById('activeInputWeight').value) || 0; const reps = parseInt(document.getElementById('activeInputReps').value) || 0;
@@ -1213,7 +1194,6 @@
       const localSet = {...syncSet, routineName: syncSet.routine_name, exerciseName: syncSet.exercise_name, setNum: syncSet.set_num, date: syncSet.date_str, time: syncSet.time_str};
       APP_STATE.series_entreno.push(localSet); APP_STATE.activeSession.setsCompletedInSession.push(localSet); persistData(); APP_STATE.activeSession.currentSetNum++; 
       addToSyncQueue('series_log', syncSet);
-      try { const r = JSON.parse(localStorage.getItem('fitpulse_exercise_records')||'{}'); r[currentEx.name] = { weight, reps, date: new Date().toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }; localStorage.setItem('fitpulse_exercise_records', JSON.stringify(r)); } catch(e) {}
       renderActiveExerciseView(); renderSetsDashboard(); startRestTimer(90);
     }
 
@@ -1230,15 +1210,45 @@
     function openModalGestion() { document.getElementById('modalGestion').classList.remove('hidden'); renderGestionRutinas(); renderGestionEjercicios(); if (window.lucide) lucide.createIcons(); }
     function closeModalGestion() { document.getElementById('modalGestion').classList.add('hidden'); }
     function switchGestionTab(tab) { const active = "py-2 rounded-full btn-primary shadow-sm transition"; const inactive = "py-2 rounded-full opacity-60 hover:opacity-100 transition"; if (tab === 'rutinas') { document.getElementById('tabBtnGestionRutinas').className = active; document.getElementById('tabBtnGestionEjercicios').className = inactive; document.getElementById('sectionGestionRutinas').classList.remove('hidden'); document.getElementById('sectionGestionEjercicios').classList.add('hidden'); } else { document.getElementById('tabBtnGestionEjercicios').className = active; document.getElementById('tabBtnGestionRutinas').className = inactive; document.getElementById('sectionGestionEjercicios').classList.remove('hidden'); document.getElementById('sectionGestionRutinas').classList.add('hidden'); } }
-    function renderGestionRutinas() { document.getElementById('listaRutinasGestion').innerHTML = APP_STATE.routines.map(r => `<div class="p-3 rounded-2xl slate-item border ${r.id === APP_STATE.selectedRoutineId ? '!border-emerald-500' : ''} flex items-center justify-between text-xs mb-2 transition-all"><div class="flex-1 pr-2 cursor-pointer" onclick="seleccionarRutinaDesdeModal('${r.id}')"><div class="flex items-center gap-1.5 mb-0.5"><h4 class="font-bold ${r.id === APP_STATE.selectedRoutineId ? 'text-emerald-600 dark:text-emerald-400' : ''}">${r.name}</h4></div><p class="text-[11px] opacity-60">${r.desc} (${r.exercises.length} ejercicios)</p></div><div class="flex items-center gap-1"><button onclick="eliminarRutina('${r.id}')" class="p-1.5 opacity-60 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons(); }
-    function renderGestionEjercicios() { const r = getCurrentRoutine(); document.getElementById('listaEjerciciosCatalogo').innerHTML = `<div class="mb-3 pb-2 border-b border-[var(--app-border)] text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Añadiendo a: <span class="var(--text-main)">${r.name}</span></div>` + (!r.exercises.length ? `<p class="text-xs opacity-60 text-center py-4">Sin ejercicios.</p>` : r.exercises.map((c, idx) => `<div class="p-2.5 rounded-xl slate-item flex items-center justify-between text-xs mb-2 border-transparent"><div><span class="font-medium">${c.name}</span><span class="text-[10px] opacity-60 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 ml-2">${c.muscle}</span></div><button onclick="eliminarEjercicio(${idx})" class="p-1 opacity-60 text-red-500"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div>`).join('')); if (window.lucide) lucide.createIcons(); }
-    function crearNuevaRutina() { const n = document.getElementById('nuevaRutinaNombre').value.trim(); const d = document.getElementById('nuevaRutinaDesc').value.trim(); if (!n) return; const id = 'r_' + Date.now(); APP_STATE.routines.push({ id, name: n, desc: d || 'Personalizada', exercises: [] }); APP_STATE.selectedRoutineId = id; persistData(); document.getElementById('nuevaRutinaNombre').value = ''; document.getElementById('nuevaRutinaDesc').value = ''; renderGestionRutinas(); renderRoutineCards(); renderPreviewRoutine(); renderGestionEjercicios(); switchGestionTab('ejercicios'); }
-    function crearNuevoEjercicioCatalogo() { const n = document.getElementById('nuevoEjercicioNombre').value.trim(); const m = document.getElementById('nuevoEjercicioMusculo').value; const s = parseInt(document.getElementById('nuevoEjercicioSeries').value) || 4; if (!n) return; getCurrentRoutine().exercises.push({ name: n, targetSets: s, muscle: m, defaultWeight: 40, defaultReps: 10 }); persistData(); document.getElementById('nuevoEjercicioNombre').value = ''; renderPreviewRoutine(); renderGestionEjercicios(); }
+    function renderGestionRutinas() { document.getElementById('listaRutinasGestion').innerHTML = APP_STATE.routines.map(r => `<div class="p-3 rounded-2xl slate-item border ${r.id === APP_STATE.selectedRoutineId ? '!border-emerald-500' : ''} flex items-center justify-between text-xs mb-2 transition-all"><div class="flex-1 pr-2 cursor-pointer" onclick="seleccionarRutinaDesdeModal('${r.id}')"><div class="flex items-center gap-1.5 mb-0.5"><h4 class="font-bold ${r.id === APP_STATE.selectedRoutineId ? 'text-emerald-600 dark:text-emerald-400' : ''}">${r.name}</h4></div><p class="text-[11px] opacity-60">${r.desc} (${r.exercises.length} ejercicios)</p></div><button onclick="eliminarRutina('${r.id}')" class="p-1.5 opacity-60 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div>`).join(''); if (window.lucide) lucide.createIcons(); }
+    function renderGestionEjercicios() { const r = getCurrentRoutine(); document.getElementById('listaEjerciciosCatalogo').innerHTML = `<div class="mb-3 pb-2 border-b border-[var(--app-border)] text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Añadiendo a: <span>${r.name}</span></div>` + (!r.exercises.length ? `<p class="text-xs opacity-60 text-center py-4">Sin ejercicios.</p>` : r.exercises.map((c, idx) => `<div class="p-2.5 rounded-xl slate-item flex items-center justify-between text-xs mb-2 border-transparent"><div><span class="font-medium">${c.name}</span><span class="text-[10px] opacity-60 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 ml-2">${c.muscle}</span></div><button onclick="eliminarEjercicio(${idx})" class="p-1 opacity-60 text-red-500"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div>`).join('')); if (window.lucide) lucide.createIcons(); }
+    
+    function sincronizarRutinaEnNube(routine) {
+      addToSyncQueue('rutinas', {
+        id: routine.id,
+        name: routine.name,
+        desc_text: routine.desc,
+        exercises: routine.exercises
+      });
+    }
+
+    function crearNuevaRutina() {
+      const n = document.getElementById('nuevaRutinaNombre').value.trim(); const d = document.getElementById('nuevaRutinaDesc').value.trim(); if (!n) return;
+      const id = 'r_' + Date.now();
+      const nueva = { id, name: n, desc: d || 'Personalizada', exercises: [] };
+      APP_STATE.routines.push(nueva);
+      APP_STATE.selectedRoutineId = id;
+      persistData();
+      sincronizarRutinaEnNube(nueva);
+      document.getElementById('nuevaRutinaNombre').value = ''; document.getElementById('nuevaRutinaDesc').value = '';
+      renderGestionRutinas(); renderRoutineCards(); renderPreviewRoutine(); renderGestionEjercicios(); switchGestionTab('ejercicios');
+    }
+
+    function crearNuevoEjercicioCatalogo() {
+      const n = document.getElementById('nuevoEjercicioNombre').value.trim(); const m = document.getElementById('nuevoEjercicioMusculo').value; const s = parseInt(document.getElementById('nuevoEjercicioSeries').value) || 4; if (!n) return;
+      const r = getCurrentRoutine();
+      r.exercises.push({ name: n, targetSets: s, muscle: m, defaultWeight: 40, defaultReps: 10 });
+      persistData();
+      sincronizarRutinaEnNube(r);
+      document.getElementById('nuevoEjercicioNombre').value = '';
+      renderPreviewRoutine(); renderGestionEjercicios();
+    }
+
     function seleccionarRutinaDesdeModal(id) { APP_STATE.selectedRoutineId = id; persistData(); renderRoutineCards(); renderPreviewRoutine(); renderGestionRutinas(); renderGestionEjercicios(); switchGestionTab('ejercicios'); }
     function eliminarRutina(id) { if (APP_STATE.routines.length <= 1) return; if (confirm("¿Eliminar?")) { APP_STATE.routines = APP_STATE.routines.filter(r => r.id !== id); if (APP_STATE.selectedRoutineId === id) APP_STATE.selectedRoutineId = APP_STATE.routines[0].id; persistData(); renderGestionRutinas(); renderRoutineCards(); renderPreviewRoutine(); renderGestionEjercicios(); } }
-    function eliminarEjercicio(idx) { if (confirm("¿Eliminar?")) { getCurrentRoutine().exercises.splice(idx, 1); persistData(); renderGestionEjercicios(); renderPreviewRoutine(); } }
+    function eliminarEjercicio(idx) { if (confirm("¿Eliminar?")) { const r = getCurrentRoutine(); r.exercises.splice(idx, 1); persistData(); sincronizarRutinaEnNube(r); renderGestionEjercicios(); renderPreviewRoutine(); } }
 
-    function exportBackup() { persistData(); const b = new Blob([JSON.stringify({ fitpulse_today_meals: APP_STATE.comidas_diarias, fitpulse_today_sets: APP_STATE.series_entreno, fitpulse_goals: APP_STATE.goals, fitpulse_routines: APP_STATE.routines, fitpulse_custom_foods: APP_STATE.alimentos_base, fitpulse_meal_types: APP_STATE.mealTypes, fitpulse_exercise_records: JSON.parse(localStorage.getItem('fitpulse_exercise_records') || '{}') }, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; const d = new Date(); a.download = `FitPulse_Backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
+    function exportBackup() { persistData(); const b = new Blob([JSON.stringify({ fitpulse_today_meals: APP_STATE.comidas_diarias, fitpulse_today_sets: APP_STATE.series_entreno, fitpulse_goals: APP_STATE.goals, fitpulse_routines: APP_STATE.routines, fitpulse_custom_foods: APP_STATE.alimentos_base, fitpulse_meal_types: APP_STATE.mealTypes }, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; const d = new Date(); a.download = `FitPulse_Backup_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
     function triggerImportBackup() { document.getElementById('importBackupInput').click(); }
     function importBackup(ev) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = function(e) { try { const d = JSON.parse(e.target.result); if (d && typeof d === 'object') { Object.keys(d).forEach(k => { if (d[k] !== null && d[k] !== undefined) localStorage.setItem(k, JSON.stringify(d[k])); }); alert('Restaurado. Reiniciando...'); location.reload(); } } catch(err){} }; r.readAsText(f); ev.target.value = ''; }
 
