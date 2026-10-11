@@ -145,7 +145,7 @@
           </div>
           <div>
             <h2 class="text-base font-bold tracking-tight">FitPulse</h2>
-            <p class="text-[11px] opacity-60">Offline-First v3.5</p>
+            <p class="text-[11px] opacity-60">Offline-First v3.6</p>
           </div>
         </div>
         <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="toggleNavDrawer(false)">
@@ -190,7 +190,7 @@
       </div>
     </div>
     <div class="pt-4 border-t border-[var(--app-border)] flex items-center justify-between text-xs opacity-60">
-      <span>FitPulse · v3.5</span>
+      <span>FitPulse · v3.6</span>
       <button class="hover:opacity-100 transition" onclick="toggleNavDrawer(false)">Cerrar</button>
     </div>
   </aside>
@@ -625,15 +625,15 @@
         <div class="grid grid-cols-3 gap-2">
           <div>
             <label class="block text-[10px] font-semibold text-rose-500 mb-1">Prot (g)</label>
-            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalProteinInput" type="number" value="160" oninput="calcularKcalDesdeMacros()"/>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalProteinInput" type="number" value="160" oninput="autoSaveGoals()"/>
           </div>
           <div>
             <label class="block text-[10px] font-semibold text-sky-500 mb-1">Carb (g)</label>
-            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalCarbsInput" type="number" value="280" oninput="calcularKcalDesdeMacros()"/>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalCarbsInput" type="number" value="280" oninput="autoSaveGoals()"/>
           </div>
           <div>
             <label class="block text-[10px] font-semibold text-amber-500 mb-1">Gras (g)</label>
-            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalFatInput" type="number" value="65" oninput="calcularKcalDesdeMacros()"/>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalFatInput" type="number" value="65" oninput="autoSaveGoals()"/>
           </div>
         </div>
         <div class="pt-2 border-t border-[var(--app-border)]">
@@ -641,9 +641,8 @@
           <input class="w-full slate-input rounded-2xl px-4 py-2.5 text-xl font-bold text-center bg-black/5 dark:bg-white/5 opacity-60 pointer-events-none" id="goalKcalInput" type="number" readonly/>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-2 pt-2">
-        <button class="py-3 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalMetas()">Cancelar</button>
-        <button class="py-3 rounded-full btn-primary text-xs font-bold uppercase tracking-wider transition hover:opacity-90" onclick="saveGoals()">Guardar</button>
+      <div class="pt-2">
+        <button class="w-full py-3 rounded-full slate-item text-xs font-bold uppercase tracking-wider transition hover:opacity-80" onclick="closeModalMetas()">Cerrar</button>
       </div>
     </div>
   </div>
@@ -1068,29 +1067,48 @@
       }
     }
 
-    function openModalMetas() { document.getElementById('goalProteinInput').value = APP_STATE.goals.protein; document.getElementById('goalCarbsInput').value = APP_STATE.goals.carbs; document.getElementById('goalFatInput').value = APP_STATE.goals.fat; calcularKcalDesdeMacros(); document.getElementById('modalMetas').classList.remove('hidden'); if (window.lucide) lucide.createIcons(); }
-    function calcularKcalDesdeMacros() { const p = Number(document.getElementById('goalProteinInput').value) || 0; const c = Number(document.getElementById('goalCarbsInput').value) || 0; const f = Number(document.getElementById('goalFatInput').value) || 0; document.getElementById('goalKcalInput').value = Math.round((p * 4) + (c * 4) + (f * 9)); }
-    function closeModalMetas() { document.getElementById('modalMetas').classList.add('hidden'); }
-
-    function saveGoals() {
+    function openModalMetas() { 
+      document.getElementById('goalProteinInput').value = APP_STATE.goals.protein; 
+      document.getElementById('goalCarbsInput').value = APP_STATE.goals.carbs; 
+      document.getElementById('goalFatInput').value = APP_STATE.goals.fat; 
+      document.getElementById('goalKcalInput').value = APP_STATE.goals.kcal;
+      document.getElementById('modalMetas').classList.remove('hidden'); 
+      if (window.lucide) lucide.createIcons(); 
+    }
+    
+    let syncMetasTimeout = null;
+    
+    function autoSaveGoals() {
+      // 1. Leer y calcular al vuelo
       APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 0;
       APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 0;
       APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 0;
       APP_STATE.goals.kcal = Math.round((APP_STATE.goals.protein * 4) + (APP_STATE.goals.carbs * 4) + (APP_STATE.goals.fat * 9));
 
-      document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`;
-      document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`;
-      document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`;
-      document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`;
-      document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`;
+      // 2. Reflejar la suma en el input de solo lectura del modal
+      document.getElementById('goalKcalInput').value = APP_STATE.goals.kcal;
 
-      // GUARDADO LOCAL Y ENVÍO A LA NUBE (SUPABASE)
+      // 3. Guardar en memoria local al instante
       localStorage.setItem('fitpulse_goals', JSON.stringify(APP_STATE.goals));
-      addToSyncQueue('metas_usuario', { id: 'default', kcal: APP_STATE.goals.kcal, protein: APP_STATE.goals.protein, carbs: APP_STATE.goals.carbs, fat: APP_STATE.goals.fat });
 
-      persistData();
-      closeModalMetas();
+      // 4. Actualizar el Dashboard por detrás en tiempo real
       updateNutritionDashboard();
+
+      // 5. Añadir a la cola de Supabase con "debounce" para no saturar la red
+      clearTimeout(syncMetasTimeout);
+      syncMetasTimeout = setTimeout(() => {
+        addToSyncQueue('metas_usuario', { 
+          id: 'default', 
+          kcal: APP_STATE.goals.kcal, 
+          protein: APP_STATE.goals.protein, 
+          carbs: APP_STATE.goals.carbs, 
+          fat: APP_STATE.goals.fat 
+        });
+      }, 1500);
+    }
+    
+    function closeModalMetas() { 
+      document.getElementById('modalMetas').classList.add('hidden'); 
     }
 
     function openModalGestionAlimentos() { document.getElementById('modalGestionAlimentos').classList.remove('hidden'); renderGestionAlimentos(); if (window.lucide) lucide.createIcons(); }
@@ -1153,24 +1171,24 @@
       container.innerHTML = filteredMeals.map(m => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">${m.mealType[0]}</div><div><h4 class="text-xs font-bold">${m.name}</h4><p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p></div></div><div class="flex items-center gap-2"><div class="text-right"><span class="text-xs font-bold block">${m.kcal} kcal</span><span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span></div><button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons();
     }
 
-   function updateNutritionDashboard() {
+    function updateNutritionDashboard() {
       const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
       const totals = filteredMeals.reduce((acc, cur) => { acc.kcal += cur.kcal; acc.prot += cur.prot; acc.carb += cur.carb; acc.gras += cur.gras; return acc; }, { kcal: 0, prot: 0, carb: 0, gras: 0 });
       
-      // Actualizar barras de progreso
+      // Actualizar barras de progreso y totales actuales
       document.getElementById('dashKcalTotal').innerText = totals.kcal; const pctKcal = Math.min(Math.round((totals.kcal / APP_STATE.goals.kcal) * 100), 100) || 0; document.getElementById('dashKcalPercent').innerText = `${pctKcal}%`; document.getElementById('dashKcalBar').style.width = `${pctKcal}%`;
       document.getElementById('dashProtVal').innerText = `${Math.round(totals.prot)}g`; const pctProt = Math.min(Math.round((totals.prot / APP_STATE.goals.protein) * 100), 100) || 0; document.getElementById('dashProtPct').innerText = `${pctProt}%`; document.getElementById('dashProtBar').style.width = `${pctProt}%`;
       document.getElementById('dashCarbVal').innerText = `${Math.round(totals.carb)}g`; const pctCarb = Math.min(Math.round((totals.carb / APP_STATE.goals.carbs) * 100), 100) || 0; document.getElementById('dashCarbPct').innerText = `${pctCarb}%`; document.getElementById('dashCarbBar').style.width = `${pctCarb}%`;
       document.getElementById('dashGrasVal').innerText = `${Math.round(totals.gras)}g`; const pctGras = Math.min(Math.round((totals.gras / APP_STATE.goals.fat) * 100), 100) || 0; document.getElementById('dashGrasPct').innerText = `${pctGras}%`; document.getElementById('dashGrasBar').style.width = `${pctGras}%`;
-      
-      // REFRESCAR LOS TEXTOS DE METAS EN LA PANTALLA HOY
+
+      // Refrescar los textos base de Metas en la pantalla Hoy (por si cambian)
       document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`;
       document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`;
       document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`;
       document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`;
       document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`;
 
-      // REFRESCAR LOS TEXTOS DE METAS EN LA PANTALLA HISTORIAL
+      // Refrescar los textos de Metas en la pantalla Historial
       document.getElementById('histKcalVal').innerText = totals.kcal; document.getElementById('histKcalTarget').innerText = `/ ${APP_STATE.goals.kcal}`; 
       document.getElementById('histProtVal').innerText = `${Math.round(totals.prot)}g`; document.getElementById('histProtTarget').innerText = `/ ${APP_STATE.goals.protein}g`; 
       document.getElementById('histCarbVal').innerText = `${Math.round(totals.carb)}g`; document.getElementById('histCarbTarget').innerText = `/ ${APP_STATE.goals.carbs}g`; 
