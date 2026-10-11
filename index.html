@@ -803,7 +803,7 @@
     </div>
   </div>
 
-  <!-- MODAL CONFIGURACIÓN SUPABASE (NUEVO) -->
+  <!-- MODAL CONFIGURACIÓN SUPABASE (NUEVO CON VALIDACIÓN SEGURA) -->
   <div class="hidden fixed inset-0 z-[9999999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalSync">
     <div class="slate-card w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
@@ -871,8 +871,6 @@
       series_entreno: [],
       activeSession: { isRunning: false, routineId: null, exerciseIndex: 0, currentSetNum: 1, setsCompletedInSession: [] },
       timer: { intervalId: null, remainingSeconds: 90, totalSeconds: 90, isPaused: false },
-      
-      // NUEVO: SISTEMA OFFLINE-FIRST Y COLA DE SINCRONIZACIÓN
       sync: { url: '', key: '' },
       syncQueue: [],
       isSyncing: false
@@ -889,15 +887,11 @@
       updateNutritionDashboard();
       renderTodayMeals();
       renderSetsDashboard();
-      updateSyncBadge(); // Inicializar badge
+      updateSyncBadge();
       if (APP_STATE.alimentos_base.length > 0) selectFoodItem(APP_STATE.alimentos_base[0]);
       if (window.lucide) lucide.createIcons();
-      
-      // Escuchar cuando vuelva el internet
       window.addEventListener('online', processSyncQueue);
       window.addEventListener('offline', updateSyncBadge);
-      
-      // Intentar sincronizar si hay tareas pendientes al abrir
       setTimeout(processSyncQueue, 1000);
     });
 
@@ -909,8 +903,6 @@
         const sr = localStorage.getItem('fitpulse_routines'); if(sr) APP_STATE.routines = JSON.parse(sr);
         const sf = localStorage.getItem('fitpulse_custom_foods'); if(sf) APP_STATE.alimentos_base = JSON.parse(sf);
         const st = localStorage.getItem('fitpulse_meal_types'); if(st) APP_STATE.mealTypes = JSON.parse(st);
-        
-        // CARGAR CONFIGURACIÓN DE SINCRONIZACIÓN
         const syncConf = localStorage.getItem('fitpulse_sync_config'); if(syncConf) APP_STATE.sync = JSON.parse(syncConf);
         const syncQ = localStorage.getItem('fitpulse_sync_queue'); if(syncQ) APP_STATE.syncQueue = JSON.parse(syncQ);
       } catch(e) {}
@@ -924,15 +916,13 @@
         localStorage.setItem('fitpulse_routines', JSON.stringify(APP_STATE.routines));
         localStorage.setItem('fitpulse_custom_foods', JSON.stringify(APP_STATE.alimentos_base));
         localStorage.setItem('fitpulse_meal_types', JSON.stringify(APP_STATE.mealTypes));
-        
-        // GUARDAR COLA DE SINCRONIZACIÓN
         localStorage.setItem('fitpulse_sync_config', JSON.stringify(APP_STATE.sync));
         localStorage.setItem('fitpulse_sync_queue', JSON.stringify(APP_STATE.syncQueue));
       } catch(e) {}
     }
 
     /* ==========================================
-       MOTOR OFFLINE-FIRST (COLA Y SUPABASE)
+       MOTOR OFFLINE-FIRST (CON VALIDACIÓN SEGURA)
        ========================================== */
     function openModalSync() {
       document.getElementById('syncUrlInput').value = APP_STATE.sync.url || '';
@@ -943,98 +933,98 @@
     
     function closeModalSync() { document.getElementById('modalSync').classList.add('hidden'); }
     
-    function saveSyncConfig() {
-      APP_STATE.sync.url = document.getElementById('syncUrlInput').value.trim();
-      APP_STATE.sync.key = document.getElementById('syncKeyInput').value.trim();
-      persistData();
-      closeModalSync();
-      updateSyncBadge();
-      processSyncQueue(); // Intentar conectar inmediatamente
+    async function saveSyncConfig() {
+      const testUrl = document.getElementById('syncUrlInput').value.trim();
+      const testKey = document.getElementById('syncKeyInput').value.trim();
+      
+      // Si dejas los campos vacíos, borra la conexión
+      if (!testUrl || !testKey) {
+        APP_STATE.sync.url = '';
+        APP_STATE.sync.key = '';
+        persistData();
+        closeModalSync();
+        updateSyncBadge();
+        return;
+      }
+
+      // Buscamos el botón para ponerlo en modo "cargando"
+      const btn = document.querySelector('button[onclick="saveSyncConfig()"]');
+      const originalText = btn ? btn.innerText : 'Guardar y Conectar';
+      if (btn) btn.innerText = "Verificando...";
+
+      try {
+        // Hacemos un "ping" real a tu tabla de Supabase para ver si nos deja entrar
+        const response = await fetch(`${testUrl}/rest/v1/alimentos_base?select=id&limit=1`, {
+          method: 'GET',
+          headers: {
+            'apikey': testKey,
+            'Authorization': `Bearer ${testKey}`
+          }
+        });
+
+        if (response.ok) {
+          // ¡La llave abre la puerta! Lo guardamos
+          APP_STATE.sync.url = testUrl;
+          APP_STATE.sync.key = testKey;
+          persistData();
+          closeModalSync();
+          updateSyncBadge();
+          processSyncQueue();
+        } else {
+          // Supabase rechaza la clave (Error 401 o 403)
+          alert('⛔ Error de autenticación: La Anon Key es incorrecta o está incompleta.');
+        }
+      } catch(e) {
+        // Fallo de red (Has escrito mal el https:// de la URL o no tienes internet)
+        alert('⛔ Error de conexión: Verifica que la URL de Supabase está bien escrita.');
+      }
+      
+      if (btn) btn.innerText = originalText;
     }
 
     function addToSyncQueue(tableName, payload) {
-      if(!APP_STATE.sync.url || !APP_STATE.sync.key) return; // Si no hay config, no hacer nada en la cola
-      
-      const task = {
-        id: Date.now() + Math.random().toString(36).substr(2, 5),
-        table: tableName,
-        payload: payload
-      };
+      if(!APP_STATE.sync.url || !APP_STATE.sync.key) return; 
+      const task = { id: Date.now() + Math.random().toString(36).substr(2, 5), table: tableName, payload: payload };
       APP_STATE.syncQueue.push(task);
       persistData();
       updateSyncBadge();
-      processSyncQueue(); // Disparar intento en 2º plano
+      processSyncQueue(); 
     }
 
     async function processSyncQueue() {
-      if (!navigator.onLine || !APP_STATE.sync.url || !APP_STATE.sync.key) {
-        updateSyncBadge();
-        return;
-      }
-      if (APP_STATE.syncQueue.length === 0) {
-        updateSyncBadge();
-        return;
-      }
-
-      APP_STATE.isSyncing = true;
-      updateSyncBadge();
-
-      // Clonamos para procesar
+      if (!navigator.onLine || !APP_STATE.sync.url || !APP_STATE.sync.key) { updateSyncBadge(); return; }
+      if (APP_STATE.syncQueue.length === 0) { updateSyncBadge(); return; }
+      APP_STATE.isSyncing = true; updateSyncBadge();
       const queueCopy = [...APP_STATE.syncQueue];
       
       for (let item of queueCopy) {
         try {
           const response = await fetch(`${APP_STATE.sync.url}/rest/v1/${item.table}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': APP_STATE.sync.key,
-              'Authorization': `Bearer ${APP_STATE.sync.key}`,
-              'Prefer': 'return=minimal'
-            },
+            headers: { 'Content-Type': 'application/json', 'apikey': APP_STATE.sync.key, 'Authorization': `Bearer ${APP_STATE.sync.key}`, 'Prefer': 'return=minimal' },
             body: JSON.stringify(item.payload)
           });
           
           if (response.ok || response.status === 201) {
-            // Si el servidor lo aceptó, lo borramos de la cola
             APP_STATE.syncQueue = APP_STATE.syncQueue.filter(q => q.id !== item.id);
             persistData();
-          } else {
-            console.error('Error de Supabase:', await response.text());
-          }
-        } catch(e) {
-          console.error("Fallo de red durante la sincronización", e);
-          // Al fallar la red, cortamos el loop. Ya se intentará más tarde.
-          break; 
-        }
+          } else { console.error('Error de Supabase:', await response.text()); }
+        } catch(e) { console.error("Fallo de red", e); break; }
       }
-      
-      APP_STATE.isSyncing = false;
-      updateSyncBadge();
+      APP_STATE.isSyncing = false; updateSyncBadge();
     }
 
     function updateSyncBadge() {
-      const badge = document.getElementById('syncBadge');
-      const dot = document.getElementById('syncDot');
-      const text = document.getElementById('syncText');
+      const badge = document.getElementById('syncBadge'); const dot = document.getElementById('syncDot'); const text = document.getElementById('syncText');
       if(!badge) return;
-
       if (!APP_STATE.sync.url || !APP_STATE.sync.key) {
-        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-slate-500/10 text-slate-500 border border-slate-500/20";
-        dot.className = "w-1.5 h-1.5 rounded-full bg-slate-500";
-        text.innerText = "Local";
+        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-slate-500/10 text-slate-500 border border-slate-500/20"; dot.className = "w-1.5 h-1.5 rounded-full bg-slate-500"; text.innerText = "Local";
       } else if (!navigator.onLine) {
-        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20";
-        dot.className = "w-1.5 h-1.5 rounded-full bg-red-500";
-        text.innerText = "Offline";
+        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20"; dot.className = "w-1.5 h-1.5 rounded-full bg-red-500"; text.innerText = "Offline";
       } else if (APP_STATE.isSyncing || APP_STATE.syncQueue.length > 0) {
-        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20";
-        dot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse";
-        text.innerText = APP_STATE.isSyncing ? "Enviando..." : `${APP_STATE.syncQueue.length} ptend.`;
+        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20"; dot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"; text.innerText = APP_STATE.isSyncing ? "Enviando..." : `${APP_STATE.syncQueue.length} ptend.`;
       } else {
-        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20";
-        dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
-        text.innerText = "Sincronizado";
+        badge.className = "flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20"; dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500"; text.innerText = "Sincronizado";
       }
     }
     /* ========================================== */
@@ -1046,58 +1036,34 @@
     }
 
     function applyTheme(theme) {
-      APP_STATE.theme = theme;
-      const html = document.documentElement;
-      const icon = document.getElementById('themeIcon');
+      APP_STATE.theme = theme; const html = document.documentElement; const icon = document.getElementById('themeIcon');
       if (theme === 'light') { html.classList.remove('dark'); html.classList.add('light'); if (icon) icon.setAttribute('data-lucide', 'moon'); }
       else { html.classList.remove('light'); html.classList.add('dark'); if (icon) icon.setAttribute('data-lucide', 'sun'); }
-      localStorage.setItem('fitpulse_theme', theme);
-      updateDockThemeStyles();
-      if (window.lucide) lucide.createIcons();
+      localStorage.setItem('fitpulse_theme', theme); updateDockThemeStyles(); if (window.lucide) lucide.createIcons();
     }
 
     function toggleTheme() { applyTheme(APP_STATE.theme === 'dark' ? 'light' : 'dark'); }
 
     function toggleNavDrawer(isOpen) {
-      const overlay = document.getElementById('navDrawerOverlay');
-      const panel = document.getElementById('navDrawerPanel');
-      if (!overlay || !panel) return;
-      if (isOpen) {
-        overlay.classList.remove('hidden');
-        requestAnimationFrame(() => { overlay.classList.remove('opacity-0'); overlay.classList.add('opacity-100'); panel.classList.remove('-translate-x-full'); panel.classList.add('translate-x-0'); });
-      } else {
-        overlay.classList.remove('opacity-100'); overlay.classList.add('opacity-0'); panel.classList.remove('translate-x-0'); panel.classList.add('-translate-x-full');
-        setTimeout(() => { overlay.classList.add('hidden'); }, 300);
-      }
+      const overlay = document.getElementById('navDrawerOverlay'); const panel = document.getElementById('navDrawerPanel'); if (!overlay || !panel) return;
+      if (isOpen) { overlay.classList.remove('hidden'); requestAnimationFrame(() => { overlay.classList.remove('opacity-0'); overlay.classList.add('opacity-100'); panel.classList.remove('-translate-x-full'); panel.classList.add('translate-x-0'); }); } 
+      else { overlay.classList.remove('opacity-100'); overlay.classList.add('opacity-0'); panel.classList.remove('translate-x-0'); panel.classList.add('-translate-x-full'); setTimeout(() => { overlay.classList.add('hidden'); }, 300); }
       if (window.lucide) lucide.createIcons();
     }
 
     function switchTab(tab) {
       if (APP_STATE.selectedDate && APP_STATE.selectedDate !== getTodayStr()) selectDate(getTodayStr());
       APP_STATE.activeTab = tab;
-      ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => {
-        const sec = document.getElementById(`tab-${t}`);
-        if (t === tab) sec?.classList.remove('hidden'); else sec?.classList.add('hidden');
-      });
-      updateDockThemeStyles();
-      if (tab === 'historial') updateHistorialSummary();
-      if (window.lucide) lucide.createIcons();
+      ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => { const sec = document.getElementById(`tab-${t}`); if (t === tab) sec?.classList.remove('hidden'); else sec?.classList.add('hidden'); });
+      updateDockThemeStyles(); if (tab === 'historial') updateHistorialSummary(); if (window.lucide) lucide.createIcons();
     }
 
     function updateDockThemeStyles() {
       const tab = APP_STATE.activeTab;
       ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => {
-        const capitalized = t.charAt(0).toUpperCase() + t.slice(1);
-        const pill = document.getElementById(`pill${capitalized}`);
-        const label = document.getElementById(`label${capitalized}`);
-        if (!pill || !label) return;
-        if (t === tab) {
-          pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all btn-primary";
-          label.className = "text-[10px] mt-0.5 font-bold";
-        } else {
-          pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100";
-          label.className = "text-[10px] mt-0.5 opacity-60";
-        }
+        const capitalized = t.charAt(0).toUpperCase() + t.slice(1); const pill = document.getElementById(`pill${capitalized}`); const label = document.getElementById(`label${capitalized}`); if (!pill || !label) return;
+        if (t === tab) { pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all btn-primary"; label.className = "text-[10px] mt-0.5 font-bold"; } 
+        else { pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100"; label.className = "text-[10px] mt-0.5 opacity-60"; }
       });
     }
 
@@ -1114,69 +1080,32 @@
         const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         const dayNum = String(d.getDate()).padStart(2, '0');
         const isSelected = dateStr === APP_STATE.selectedDate;
-        html += `<button onclick="selectDate('${dateStr}')" class="day-btn ${isSelected?'active shadow-lg font-bold':'slate-item font-semibold'} flex flex-col items-center py-2 px-1 rounded-2xl text-center active:scale-95 transition">
-            <span class="text-[10px] uppercase ${isSelected?'opacity-80':'opacity-60'}">${daysMap[i]}</span>
-            <span class="text-xs mt-0.5">${dayNum}</span>
-          </button>`;
+        html += `<button onclick="selectDate('${dateStr}')" class="day-btn ${isSelected?'active shadow-lg font-bold':'slate-item font-semibold'} flex flex-col items-center py-2 px-1 rounded-2xl text-center active:scale-95 transition"><span class="text-[10px] uppercase ${isSelected?'opacity-80':'opacity-60'}">${daysMap[i]}</span><span class="text-xs mt-0.5">${dayNum}</span></button>`;
       }
       container.innerHTML = html;
     }
 
     function selectDate(dateStr) {
-      APP_STATE.selectedDate = dateStr;
-      renderWeekSelector(); updateNutritionDashboard(); renderTodayMeals(); renderSetsDashboard();
-      
-      const titleEl = document.getElementById('mainDashboardTitle'); const subTitleEl = document.getElementById('mainDashboardSubtitle');
-      const todayStr = getTodayStr();
+      APP_STATE.selectedDate = dateStr; renderWeekSelector(); updateNutritionDashboard(); renderTodayMeals(); renderSetsDashboard();
+      const titleEl = document.getElementById('mainDashboardTitle'); const subTitleEl = document.getElementById('mainDashboardSubtitle'); const todayStr = getTodayStr();
       if (titleEl) {
         if (dateStr === todayStr) {
           titleEl.innerText = 'hoy.'; subTitleEl.innerText = 'progreso diario';
-          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados Hoy';
-          document.getElementById('todaySetsSectionTitle').innerText = 'Series de Hoy';
+          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados Hoy'; document.getElementById('todaySetsSectionTitle').innerText = 'Series de Hoy';
         } else {
           const parts = dateStr.split('-');
           titleEl.innerText = `${parts[2]}/${parts[1]}.`; subTitleEl.innerText = 'registro histórico';
-          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados';
-          document.getElementById('todaySetsSectionTitle').innerText = 'Series Registradas';
+          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados'; document.getElementById('todaySetsSectionTitle').innerText = 'Series Registradas';
         }
       }
       if (autoReturnTimer) clearTimeout(autoReturnTimer);
       if (dateStr !== todayStr) autoReturnTimer = setTimeout(() => { selectDate(todayStr); }, 60000);
     }
 
-    /* METAS AUTOMÁTICAS */
-    function openModalMetas() {
-      document.getElementById('goalProteinInput').value = APP_STATE.goals.protein;
-      document.getElementById('goalCarbsInput').value = APP_STATE.goals.carbs;
-      document.getElementById('goalFatInput').value = APP_STATE.goals.fat;
-      calcularKcalDesdeMacros();
-      document.getElementById('modalMetas').classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function calcularKcalDesdeMacros() {
-      const p = Number(document.getElementById('goalProteinInput').value) || 0;
-      const c = Number(document.getElementById('goalCarbsInput').value) || 0;
-      const f = Number(document.getElementById('goalFatInput').value) || 0;
-      document.getElementById('goalKcalInput').value = Math.round((p * 4) + (c * 4) + (f * 9));
-    }
-
+    function openModalMetas() { document.getElementById('goalProteinInput').value = APP_STATE.goals.protein; document.getElementById('goalCarbsInput').value = APP_STATE.goals.carbs; document.getElementById('goalFatInput').value = APP_STATE.goals.fat; calcularKcalDesdeMacros(); document.getElementById('modalMetas').classList.remove('hidden'); if (window.lucide) lucide.createIcons(); }
+    function calcularKcalDesdeMacros() { const p = Number(document.getElementById('goalProteinInput').value) || 0; const c = Number(document.getElementById('goalCarbsInput').value) || 0; const f = Number(document.getElementById('goalFatInput').value) || 0; document.getElementById('goalKcalInput').value = Math.round((p * 4) + (c * 4) + (f * 9)); }
     function closeModalMetas() { document.getElementById('modalMetas').classList.add('hidden'); }
-
-    function saveGoals() {
-      APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 0;
-      APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 0;
-      APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 0;
-      APP_STATE.goals.kcal = Math.round((APP_STATE.goals.protein * 4) + (APP_STATE.goals.carbs * 4) + (APP_STATE.goals.fat * 9));
-
-      document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`;
-      document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`;
-      document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`;
-      document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`;
-      document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`;
-
-      persistData(); closeModalMetas(); updateNutritionDashboard();
-    }
+    function saveGoals() { APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 0; APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 0; APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 0; APP_STATE.goals.kcal = Math.round((APP_STATE.goals.protein * 4) + (APP_STATE.goals.carbs * 4) + (APP_STATE.goals.fat * 9)); document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`; document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`; document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`; document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`; document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`; persistData(); closeModalMetas(); updateNutritionDashboard(); }
 
     function openModalGestionAlimentos() { document.getElementById('modalGestionAlimentos').classList.remove('hidden'); renderGestionAlimentos(); if (window.lucide) lucide.createIcons(); }
     function closeModalGestionAlimentos() { document.getElementById('modalGestionAlimentos').classList.add('hidden'); }
@@ -1185,61 +1114,26 @@
 
     function renderConfigComidas() {
       const box = document.getElementById('listaConfigComidas'); if (!box) return;
-      box.innerHTML = APP_STATE.mealTypes.map((tipo, idx) => `
-        <div class="flex items-center gap-2 mb-2">
-          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-semibold meal-type-input" data-index="${idx}" value="${tipo}"/>
-          <button onclick="eliminarTipoComida(${idx})" class="p-2 opacity-60 hover:opacity-100 text-red-500 transition"><i class="w-4 h-4" data-lucide="trash-2"></i></button>
-        </div>
-      `).join('') + `<button onclick="agregarNuevoTipoComida()" class="w-full py-2 rounded-xl slate-item text-xs font-semibold border-dashed opacity-80 hover:opacity-100 transition mt-2">+ Añadir nueva comida</button>`;
-      if (window.lucide) lucide.createIcons();
+      box.innerHTML = APP_STATE.mealTypes.map((tipo, idx) => `<div class="flex items-center gap-2 mb-2"><input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-semibold meal-type-input" data-index="${idx}" value="${tipo}"/><button onclick="eliminarTipoComida(${idx})" class="p-2 opacity-60 hover:opacity-100 text-red-500 transition"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div>`).join('') + `<button onclick="agregarNuevoTipoComida()" class="w-full py-2 rounded-xl slate-item text-xs font-semibold border-dashed opacity-80 hover:opacity-100 transition mt-2">+ Añadir nueva comida</button>`; if (window.lucide) lucide.createIcons();
     }
     function agregarNuevoTipoComida() { const nuevo = prompt("Nombre:"); if (nuevo && nuevo.trim() !== "") { APP_STATE.mealTypes.push(nuevo.trim()); renderConfigComidas(); } }
     function eliminarTipoComida(idx) { if(APP_STATE.mealTypes.length <= 1) return; APP_STATE.mealTypes.splice(idx, 1); renderConfigComidas(); }
-    
-    function guardarConfigComidas() {
-      const inputs = document.querySelectorAll('.meal-type-input'); const nuevos = [];
-      inputs.forEach(inp => { if(inp.value.trim()) nuevos.push(inp.value.trim()); });
-      if(nuevos.length > 0) { APP_STATE.mealTypes = nuevos; if(!APP_STATE.mealTypes.includes(APP_STATE.currentMealType)) APP_STATE.currentMealType = APP_STATE.mealTypes[0]; persistData(); renderMealTypeButtons(); }
-      closeModalConfigComidas();
-    }
+    function guardarConfigComidas() { const inputs = document.querySelectorAll('.meal-type-input'); const nuevos = []; inputs.forEach(inp => { if(inp.value.trim()) nuevos.push(inp.value.trim()); }); if(nuevos.length > 0) { APP_STATE.mealTypes = nuevos; if(!APP_STATE.mealTypes.includes(APP_STATE.currentMealType)) APP_STATE.currentMealType = APP_STATE.mealTypes[0]; persistData(); renderMealTypeButtons(); } closeModalConfigComidas(); }
 
-    function renderMealTypeButtons() {
-      const container = document.getElementById('mealTypeButtonsContainer'); if(!container) return;
-      container.style.gridTemplateColumns = `repeat(${Math.min(APP_STATE.mealTypes.length, 4)}, minmax(0, 1fr))`;
-      container.innerHTML = APP_STATE.mealTypes.map(tipo => `<button class="meal-pill py-2 rounded-full text-xs font-semibold text-center transition truncate px-1 ${tipo === APP_STATE.currentMealType ? 'btn-primary shadow' : 'opacity-60 hover:opacity-100'}" onclick="selectMealType('${tipo}', this)">${tipo}</button>`).join('');
-    }
-
-    function renderGestionAlimentos() {
-      const box = document.getElementById('listaAlimentosGestion'); if (!box) return;
-      box.innerHTML = APP_STATE.alimentos_base.map((a, idx) => `
-        <div class="p-3 rounded-2xl slate-item flex items-center justify-between text-xs mb-2"><div class="flex-1 pr-2"><h4 class="font-bold">${a.name}</h4><p class="text-[11px] opacity-60 mt-0.5">${a.kcal} kcal | P:${a.prot} C:${a.carb} G:${a.gras} por ${a.baseQty}${a.unit}</p></div><div class="flex items-center gap-1"><button onclick="eliminarAlimentoBase(${idx})" class="p-1.5 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div></div>
-      `).join('');
-      if (window.lucide) lucide.createIcons();
-    }
+    function renderMealTypeButtons() { const container = document.getElementById('mealTypeButtonsContainer'); if(!container) return; container.style.gridTemplateColumns = `repeat(${Math.min(APP_STATE.mealTypes.length, 4)}, minmax(0, 1fr))`; container.innerHTML = APP_STATE.mealTypes.map(tipo => `<button class="meal-pill py-2 rounded-full text-xs font-semibold text-center transition truncate px-1 ${tipo === APP_STATE.currentMealType ? 'btn-primary shadow' : 'opacity-60 hover:opacity-100'}" onclick="selectMealType('${tipo}', this)">${tipo}</button>`).join(''); }
+    function renderGestionAlimentos() { const box = document.getElementById('listaAlimentosGestion'); if (!box) return; box.innerHTML = APP_STATE.alimentos_base.map((a, idx) => `<div class="p-3 rounded-2xl slate-item flex items-center justify-between text-xs mb-2"><div class="flex-1 pr-2"><h4 class="font-bold">${a.name}</h4><p class="text-[11px] opacity-60 mt-0.5">${a.kcal} kcal | P:${a.prot} C:${a.carb} G:${a.gras} por ${a.baseQty}${a.unit}</p></div><div class="flex items-center gap-1"><button onclick="eliminarAlimentoBase(${idx})" class="p-1.5 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons(); }
     function eliminarAlimentoBase(idx) { if(confirm("¿Eliminar?")) { APP_STATE.alimentos_base.splice(idx, 1); persistData(); renderGestionAlimentos(); } }
-
-    function selectMealType(tipo, btn) {
-      APP_STATE.currentMealType = tipo;
-      const buttons = btn?.parentElement?.querySelectorAll('.meal-pill');
-      if (buttons) { buttons.forEach(b => { b.className = "meal-pill py-2 rounded-full text-xs font-semibold opacity-60 hover:opacity-100 text-center transition truncate px-1"; }); btn.className = "meal-pill py-2 rounded-full text-xs font-semibold btn-primary shadow text-center transition truncate px-1"; }
-    }
+    function selectMealType(tipo, btn) { APP_STATE.currentMealType = tipo; const buttons = btn?.parentElement?.querySelectorAll('.meal-pill'); if (buttons) { buttons.forEach(b => { b.className = "meal-pill py-2 rounded-full text-xs font-semibold opacity-60 hover:opacity-100 text-center transition truncate px-1"; }); btn.className = "meal-pill py-2 rounded-full text-xs font-semibold btn-primary shadow text-center transition truncate px-1"; } }
 
     function setPortionUnit(unit) {
-      APP_STATE.portionUnit = unit;
-      document.getElementById('btnUnitGrams').className = `flex-1 py-2 text-xs rounded-full transition ${unit === 'g'?'font-bold btn-primary':'font-semibold opacity-60 hover:opacity-100'}`;
-      document.getElementById('btnUnitPcs').className = `flex-1 py-2 text-xs rounded-full transition ${unit === 'ud'?'font-bold btn-primary':'font-semibold opacity-60 hover:opacity-100'}`;
-      const input = document.getElementById('foodAmountInput');
-      if(unit === 'g' && input.value == '1') input.value = '100';
-      if(unit === 'ud' && input.value == '100') input.value = '1';
-      calculatePreviewMacros();
+      APP_STATE.portionUnit = unit; document.getElementById('btnUnitGrams').className = `flex-1 py-2 text-xs rounded-full transition ${unit === 'g'?'font-bold btn-primary':'font-semibold opacity-60 hover:opacity-100'}`; document.getElementById('btnUnitPcs').className = `flex-1 py-2 text-xs rounded-full transition ${unit === 'ud'?'font-bold btn-primary':'font-semibold opacity-60 hover:opacity-100'}`;
+      const input = document.getElementById('foodAmountInput'); if(unit === 'g' && input.value == '1') input.value = '100'; if(unit === 'ud' && input.value == '100') input.value = '1'; calculatePreviewMacros();
     }
 
     function onFoodSearchInput(val) {
-      const query = (val || '').toLowerCase().trim(); const box = document.getElementById('foodSuggestions');
-      if (!query) { box.classList.add('hidden'); return; }
+      const query = (val || '').toLowerCase().trim(); const box = document.getElementById('foodSuggestions'); if (!query) { box.classList.add('hidden'); return; }
       const matches = APP_STATE.alimentos_base.filter(a => a.name.toLowerCase().includes(query));
-      if (matches.length === 0) box.innerHTML = `<div class="p-3 text-xs opacity-60 text-center">No encontrado.</div>`;
-      else box.innerHTML = matches.map((m, idx) => `<div class="p-3 text-xs hover:opacity-60 cursor-pointer flex justify-between items-center border-b border-[var(--app-border)]" onclick="selectFoodItemByIndex(${idx})"><div><span class="font-bold block">${m.name}</span><span class="text-[10px] opacity-60">${m.kcal} kcal · P: ${m.prot}g · C: ${m.carb}g · G: ${m.gras}g (${m.baseQty}${m.unit})</span></div><i class="w-3.5 h-3.5 opacity-60" data-lucide="corner-down-left"></i></div>`).join('');
+      if (matches.length === 0) box.innerHTML = `<div class="p-3 text-xs opacity-60 text-center">No encontrado.</div>`; else box.innerHTML = matches.map((m, idx) => `<div class="p-3 text-xs hover:opacity-60 cursor-pointer flex justify-between items-center border-b border-[var(--app-border)]" onclick="selectFoodItemByIndex(${idx})"><div><span class="font-bold block">${m.name}</span><span class="text-[10px] opacity-60">${m.kcal} kcal · P: ${m.prot}g · C: ${m.carb}g · G: ${m.gras}g (${m.baseQty}${m.unit})</span></div><i class="w-3.5 h-3.5 opacity-60" data-lucide="corner-down-left"></i></div>`).join('');
       box.classList.remove('hidden'); if (window.lucide) lucide.createIcons();
     }
 
@@ -1250,48 +1144,18 @@
       const item = APP_STATE.selectedFood; const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0;
       if (!item || qty <= 0) { document.getElementById('previewFoodKcal').innerText = '0'; document.getElementById('previewFoodProt').innerText = '0g'; document.getElementById('previewFoodCarb').innerText = '0g'; document.getElementById('previewFoodGras').innerText = '0g'; return; }
       const multiplier = item.unit === 'g' ? (qty / 100) : (qty / item.baseQty);
-      document.getElementById('previewFoodKcal').innerText = Math.round(item.kcal * multiplier);
-      document.getElementById('previewFoodProt').innerText = `${Math.round(item.prot * multiplier * 10) / 10}g`;
-      document.getElementById('previewFoodCarb').innerText = `${Math.round(item.carb * multiplier * 10) / 10}g`;
-      document.getElementById('previewFoodGras').innerText = `${Math.round(item.gras * multiplier * 10) / 10}g`;
+      document.getElementById('previewFoodKcal').innerText = Math.round(item.kcal * multiplier); document.getElementById('previewFoodProt').innerText = `${Math.round(item.prot * multiplier * 10) / 10}g`; document.getElementById('previewFoodCarb').innerText = `${Math.round(item.carb * multiplier * 10) / 10}g`; document.getElementById('previewFoodGras').innerText = `${Math.round(item.gras * multiplier * 10) / 10}g`;
     }
 
     function registrarComida() {
-      const item = APP_STATE.selectedFood; const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0;
-      if (!item || qty <= 0) { alert('Selecciona un alimento válido y una cantidad.'); return; }
+      const item = APP_STATE.selectedFood; const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0; if (!item || qty <= 0) { alert('Selecciona un alimento válido y una cantidad.'); return; }
       const multiplier = item.unit === 'g' ? (qty / 100) : (qty / item.baseQty);
-      
-      const meal = {
-        id: Date.now(), // Formato ID para Supabase (bigint simulado)
-        name: item.name,
-        meal_type: APP_STATE.currentMealType,
-        qty: qty,
-        unit: APP_STATE.portionUnit,
-        kcal: Math.round(item.kcal * multiplier),
-        prot: Math.round(item.prot * multiplier * 10) / 10,
-        carb: Math.round(item.carb * multiplier * 10) / 10,
-        gras: Math.round(item.gras * multiplier * 10) / 10,
-        date_str: getTodayStr(),
-        time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      
-      // Guardado local tradicional para UI
+      const meal = { id: Date.now(), name: item.name, meal_type: APP_STATE.currentMealType, qty: qty, unit: APP_STATE.portionUnit, kcal: Math.round(item.kcal * multiplier), prot: Math.round(item.prot * multiplier * 10) / 10, carb: Math.round(item.carb * multiplier * 10) / 10, gras: Math.round(item.gras * multiplier * 10) / 10, date_str: getTodayStr(), time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
       const uiMeal = {...meal, mealType: meal.meal_type, date: meal.date_str, time: meal.time_str};
-      APP_STATE.comidas_diarias.push(uiMeal);
-      persistData();
-      renderTodayMeals(); updateNutritionDashboard();
-
-      // NUEVO: ENVIAR A LA COLA OFFLINE-FIRST
+      APP_STATE.comidas_diarias.push(uiMeal); persistData(); renderTodayMeals(); updateNutritionDashboard();
       addToSyncQueue('comidas_log', meal);
-      
-      document.getElementById('foodSearchInput').value = ''; document.getElementById('foodAmountInput').value = '100';
-      document.getElementById('foodSuggestions').classList.add('hidden'); APP_STATE.selectedFood = null; calculatePreviewMacros();
-
-      const btn = document.getElementById('btnGuardarComida');
-      if(btn) {
-        const originalHTML = btn.innerHTML; btn.innerHTML = '<i class="w-4 h-4" data-lucide="check"></i><span>¡Añadido!</span>'; btn.classList.add('bg-emerald-500', 'text-white'); if(window.lucide) lucide.createIcons();
-        setTimeout(() => { btn.innerHTML = originalHTML; btn.classList.remove('bg-emerald-500', 'text-white'); if(window.lucide) lucide.createIcons(); }, 1500);
-      }
+      document.getElementById('foodSearchInput').value = ''; document.getElementById('foodAmountInput').value = '100'; document.getElementById('foodSuggestions').classList.add('hidden'); APP_STATE.selectedFood = null; calculatePreviewMacros();
+      const btn = document.getElementById('btnGuardarComida'); if(btn) { const originalHTML = btn.innerHTML; btn.innerHTML = '<i class="w-4 h-4" data-lucide="check"></i><span>¡Añadido!</span>'; btn.classList.add('bg-emerald-500', 'text-white'); if(window.lucide) lucide.createIcons(); setTimeout(() => { btn.innerHTML = originalHTML; btn.classList.remove('bg-emerald-500', 'text-white'); if(window.lucide) lucide.createIcons(); }, 1500); }
     }
 
     function eliminarComida(id) { APP_STATE.comidas_diarias = APP_STATE.comidas_diarias.filter(m => m.id !== id); persistData(); renderTodayMeals(); updateNutritionDashboard(); }
@@ -1301,131 +1165,54 @@
       const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
       countLabel.innerText = `${filteredMeals.length} items`;
       if (filteredMeals.length === 0) { container.innerHTML = `<div class="text-center py-6 text-xs opacity-60">No hay alimentos registrados en este día.</div>`; return; }
-      container.innerHTML = filteredMeals.map(m => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">${m.mealType[0]}</div><div><h4 class="text-xs font-bold">${m.name}</h4><p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p></div></div><div class="flex items-center gap-2"><div class="text-right"><span class="text-xs font-bold block">${m.kcal} kcal</span><span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span></div><div class="flex flex-col gap-1 border-l border-[var(--app-border)] pl-2 ml-1"><button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1 transition"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div></div></div>`).join('');
-      if (window.lucide) lucide.createIcons();
+      container.innerHTML = filteredMeals.map(m => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">${m.mealType[0]}</div><div><h4 class="text-xs font-bold">${m.name}</h4><p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p></div></div><div class="flex items-center gap-2"><div class="text-right"><span class="text-xs font-bold block">${m.kcal} kcal</span><span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span></div><div class="flex flex-col gap-1 border-l border-[var(--app-border)] pl-2 ml-1"><button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1 transition"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div></div></div>`).join(''); if (window.lucide) lucide.createIcons();
     }
 
     function updateNutritionDashboard() {
       const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
       const totals = filteredMeals.reduce((acc, cur) => { acc.kcal += cur.kcal; acc.prot += cur.prot; acc.carb += cur.carb; acc.gras += cur.gras; return acc; }, { kcal: 0, prot: 0, carb: 0, gras: 0 });
-
-      document.getElementById('dashKcalTotal').innerText = totals.kcal;
-      const pctKcal = Math.min(Math.round((totals.kcal / APP_STATE.goals.kcal) * 100), 100) || 0;
-      document.getElementById('dashKcalPercent').innerText = `${pctKcal}%`; document.getElementById('dashKcalBar').style.width = `${pctKcal}%`;
-
-      document.getElementById('dashProtVal').innerText = `${Math.round(totals.prot)}g`;
-      const pctProt = Math.min(Math.round((totals.prot / APP_STATE.goals.protein) * 100), 100) || 0;
-      document.getElementById('dashProtPct').innerText = `${pctProt}%`; document.getElementById('dashProtBar').style.width = `${pctProt}%`;
-
-      document.getElementById('dashCarbVal').innerText = `${Math.round(totals.carb)}g`;
-      const pctCarb = Math.min(Math.round((totals.carb / APP_STATE.goals.carbs) * 100), 100) || 0;
-      document.getElementById('dashCarbPct').innerText = `${pctCarb}%`; document.getElementById('dashCarbBar').style.width = `${pctCarb}%`;
-
-      document.getElementById('dashGrasVal').innerText = `${Math.round(totals.gras)}g`;
-      const pctGras = Math.min(Math.round((totals.gras / APP_STATE.goals.fat) * 100), 100) || 0;
-      document.getElementById('dashGrasPct').innerText = `${pctGras}%`; document.getElementById('dashGrasBar').style.width = `${pctGras}%`;
-
-      document.getElementById('histKcalVal').innerText = totals.kcal; document.getElementById('histKcalTarget').innerText = `/ ${APP_STATE.goals.kcal}`;
-      document.getElementById('histProtVal').innerText = `${Math.round(totals.prot)}g`; document.getElementById('histProtTarget').innerText = `/ ${APP_STATE.goals.protein}g`;
-      document.getElementById('histCarbVal').innerText = `${Math.round(totals.carb)}g`; document.getElementById('histCarbTarget').innerText = `/ ${APP_STATE.goals.carbs}g`;
-      document.getElementById('histGrasVal').innerText = `${Math.round(totals.gras)}g`; document.getElementById('histGrasTarget').innerText = `/ ${APP_STATE.goals.fat}g`;
+      document.getElementById('dashKcalTotal').innerText = totals.kcal; const pctKcal = Math.min(Math.round((totals.kcal / APP_STATE.goals.kcal) * 100), 100) || 0; document.getElementById('dashKcalPercent').innerText = `${pctKcal}%`; document.getElementById('dashKcalBar').style.width = `${pctKcal}%`;
+      document.getElementById('dashProtVal').innerText = `${Math.round(totals.prot)}g`; const pctProt = Math.min(Math.round((totals.prot / APP_STATE.goals.protein) * 100), 100) || 0; document.getElementById('dashProtPct').innerText = `${pctProt}%`; document.getElementById('dashProtBar').style.width = `${pctProt}%`;
+      document.getElementById('dashCarbVal').innerText = `${Math.round(totals.carb)}g`; const pctCarb = Math.min(Math.round((totals.carb / APP_STATE.goals.carbs) * 100), 100) || 0; document.getElementById('dashCarbPct').innerText = `${pctCarb}%`; document.getElementById('dashCarbBar').style.width = `${pctCarb}%`;
+      document.getElementById('dashGrasVal').innerText = `${Math.round(totals.gras)}g`; const pctGras = Math.min(Math.round((totals.gras / APP_STATE.goals.fat) * 100), 100) || 0; document.getElementById('dashGrasPct').innerText = `${pctGras}%`; document.getElementById('dashGrasBar').style.width = `${pctGras}%`;
+      document.getElementById('histKcalVal').innerText = totals.kcal; document.getElementById('histKcalTarget').innerText = `/ ${APP_STATE.goals.kcal}`; document.getElementById('histProtVal').innerText = `${Math.round(totals.prot)}g`; document.getElementById('histProtTarget').innerText = `/ ${APP_STATE.goals.protein}g`; document.getElementById('histCarbVal').innerText = `${Math.round(totals.carb)}g`; document.getElementById('histCarbTarget').innerText = `/ ${APP_STATE.goals.carbs}g`; document.getElementById('histGrasVal').innerText = `${Math.round(totals.gras)}g`; document.getElementById('histGrasTarget').innerText = `/ ${APP_STATE.goals.fat}g`;
     }
 
     function openModalCrearAlimento() { document.getElementById('customFoodName').value = ''; document.getElementById('customFoodKcal').value = ''; document.getElementById('customFoodProt').value = ''; document.getElementById('customFoodCarb').value = ''; document.getElementById('customFoodGras').value = ''; document.getElementById('modalCrearAlimento').classList.remove('hidden'); if (window.lucide) lucide.createIcons(); }
     function closeModalCrearAlimento() { document.getElementById('modalCrearAlimento').classList.add('hidden'); }
 
     function guardarNuevoAlimento() {
-      const name = document.getElementById('customFoodName').value.trim(); const unit = document.getElementById('customFoodUnit').value;
-      const kcal = parseFloat(document.getElementById('customFoodKcal').value) || 0; const prot = parseFloat(document.getElementById('customFoodProt').value) || 0; const carb = parseFloat(document.getElementById('customFoodCarb').value) || 0; const gras = parseFloat(document.getElementById('customFoodGras').value) || 0;
+      const name = document.getElementById('customFoodName').value.trim(); const unit = document.getElementById('customFoodUnit').value; const kcal = parseFloat(document.getElementById('customFoodKcal').value) || 0; const prot = parseFloat(document.getElementById('customFoodProt').value) || 0; const carb = parseFloat(document.getElementById('customFoodCarb').value) || 0; const gras = parseFloat(document.getElementById('customFoodGras').value) || 0;
       if (!name || kcal <= 0) { alert('Introduce nombre y kcal.'); return; }
-
-      // Nota: No enviamos ID manual, Postgres usará gen_random_uuid() para insertarlo limpio.
       const nuevo = { name, unit, base_qty: unit === 'g' ? 100 : 1, kcal, prot, carb, gras };
-      
       const uiNuevo = { name, unit, baseQty: nuevo.base_qty, kcal, prot, carb, gras };
-      APP_STATE.alimentos_base.unshift(uiNuevo);
-      persistData();
-      selectFoodItem(uiNuevo);
-      
-      // NUEVO: ENVIAR A LA COLA OFFLINE-FIRST (Catálogo maestro)
+      APP_STATE.alimentos_base.unshift(uiNuevo); persistData(); selectFoodItem(uiNuevo);
       addToSyncQueue('alimentos_base', nuevo);
-      
       closeModalCrearAlimento();
     }
 
-    function renderRoutineCards() {
-      const container = document.getElementById('routineCardsContainer'); if (!container) return;
-      container.innerHTML = APP_STATE.routines.map(r => `<button onclick="selectRoutine('${r.id}')" class="p-3 rounded-2xl border text-left transition active:scale-95 ${r.id === APP_STATE.selectedRoutineId ? 'border-slate-900 bg-slate-100 dark:border-white dark:bg-[#21242C]' : 'bg-white dark:bg-[#181A20] border-slate-200 dark:border-white/10'}"><span class="text-[10px] text-slate-400 block">${r.exercises.length} ej.</span><h4 class="text-xs font-semibold truncate text-slate-900 dark:text-white">${r.name}</h4></button>`).join('');
-    }
+    function renderRoutineCards() { const container = document.getElementById('routineCardsContainer'); if (!container) return; container.innerHTML = APP_STATE.routines.map(r => `<button onclick="selectRoutine('${r.id}')" class="p-3 rounded-2xl border text-left transition active:scale-95 ${r.id === APP_STATE.selectedRoutineId ? 'border-slate-900 bg-slate-100 dark:border-white dark:bg-[#21242C]' : 'bg-white dark:bg-[#181A20] border-slate-200 dark:border-white/10'}"><span class="text-[10px] text-slate-400 block">${r.exercises.length} ej.</span><h4 class="text-xs font-semibold truncate text-slate-900 dark:text-white">${r.name}</h4></button>`).join(''); }
     function selectRoutine(id) { APP_STATE.selectedRoutineId = id; renderRoutineCards(); renderPreviewRoutine(); }
     function getCurrentRoutine() { return APP_STATE.routines.find(r => r.id === APP_STATE.selectedRoutineId) || APP_STATE.routines[0]; }
 
-    function renderPreviewRoutine() {
-      const routine = getCurrentRoutine(); if (!routine) return;
-      document.getElementById('previewRoutineTitle').innerText = routine.name; document.getElementById('previewRoutineDesc').innerText = routine.desc;
-      document.getElementById('previewExercisesList').innerHTML = routine.exercises.map((e) => `<div class="flex items-center justify-between p-2.5 rounded-2xl slate-item text-xs border-transparent"><div><span class="font-bold">${e.name}</span><span class="text-[10px] opacity-60 block">${e.muscle} · Meta: ${e.targetSets} series</span></div><span class="text-[11px] font-semibold opacity-60">${e.defaultWeight || 0} kg</span></div>`).join('');
-    }
+    function renderPreviewRoutine() { const routine = getCurrentRoutine(); if (!routine) return; document.getElementById('previewRoutineTitle').innerText = routine.name; document.getElementById('previewRoutineDesc').innerText = routine.desc; document.getElementById('previewExercisesList').innerHTML = routine.exercises.map((e) => `<div class="flex items-center justify-between p-2.5 rounded-2xl slate-item text-xs border-transparent"><div><span class="font-bold">${e.name}</span><span class="text-[10px] opacity-60 block">${e.muscle} · Meta: ${e.targetSets} series</span></div><span class="text-[11px] font-semibold opacity-60">${e.defaultWeight || 0} kg</span></div>`).join(''); }
 
-    function updateActiveWorkoutProgress() {
-      const routine = getCurrentRoutine(); if (!routine) return;
-      const totalTargetSets = routine.exercises.reduce((acc, ex) => acc + (ex.targetSets || 0), 0);
-      const completedSets = APP_STATE.activeSession.setsCompletedInSession.length;
-      const pct = totalTargetSets > 0 ? Math.min(100, Math.round((completedSets / totalTargetSets) * 100)) : 0;
-      document.getElementById('activeWorkoutProgressText').innerText = `${pct}%`; document.getElementById('activeWorkoutProgressBar').style.width = `${pct}%`;
-    }
+    function updateActiveWorkoutProgress() { const routine = getCurrentRoutine(); if (!routine) return; const totalTargetSets = routine.exercises.reduce((acc, ex) => acc + (ex.targetSets || 0), 0); const completedSets = APP_STATE.activeSession.setsCompletedInSession.length; const pct = totalTargetSets > 0 ? Math.min(100, Math.round((completedSets / totalTargetSets) * 100)) : 0; document.getElementById('activeWorkoutProgressText').innerText = `${pct}%`; document.getElementById('activeWorkoutProgressBar').style.width = `${pct}%`; }
 
-    function iniciarOContinuarSesionActiva() {
-      const routine = getCurrentRoutine(); if (!routine || routine.exercises.length === 0) { alert('Selecciona rutina válida.'); return; }
-      APP_STATE.activeSession.isRunning = true; APP_STATE.activeSession.routineId = routine.id;
-      const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex];
-      APP_STATE.activeSession.currentSetNum = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()))).length + 1;
-      document.getElementById('panelActiveWorkoutSession').classList.remove('hidden'); document.getElementById('btnStartOrResumeWorkoutText').innerText = 'Continuar Entrenamiento'; document.getElementById('activeWorkoutRoutineName').innerText = routine.name;
-      renderActiveExerciseView(); document.getElementById('panelActiveWorkoutSession').scrollIntoView({ behavior: 'smooth' });
-    }
+    function iniciarOContinuarSesionActiva() { const routine = getCurrentRoutine(); if (!routine || routine.exercises.length === 0) { alert('Selecciona rutina válida.'); return; } APP_STATE.activeSession.isRunning = true; APP_STATE.activeSession.routineId = routine.id; const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex]; APP_STATE.activeSession.currentSetNum = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()))).length + 1; document.getElementById('panelActiveWorkoutSession').classList.remove('hidden'); document.getElementById('btnStartOrResumeWorkoutText').innerText = 'Continuar Entrenamiento'; document.getElementById('activeWorkoutRoutineName').innerText = routine.name; renderActiveExerciseView(); document.getElementById('panelActiveWorkoutSession').scrollIntoView({ behavior: 'smooth' }); }
 
-    function renderActiveExerciseView() {
-      const routine = getCurrentRoutine(); const exIndex = APP_STATE.activeSession.exerciseIndex; const currentEx = routine.exercises[exIndex];
-      document.getElementById('activeMuscleLabel').innerText = currentEx.muscle || 'Músculo'; document.getElementById('activeExBadge').innerText = currentEx.name; document.getElementById('activeSetBadge').innerText = `Serie ${APP_STATE.activeSession.currentSetNum} (Meta: ${currentEx.targetSets})`;
-      document.getElementById('activeInputWeight').value = currentEx.defaultWeight || 60; document.getElementById('activeInputReps').value = currentEx.defaultReps || 10;
-      renderActiveExerciseSetsHistory();
-      document.getElementById('btnNavExAnterior').style.display = exIndex === 0 ? 'none' : 'flex'; document.getElementById('btnNavExSiguiente').style.display = exIndex === routine.exercises.length - 1 ? 'none' : 'flex';
-      try { const r = JSON.parse(localStorage.getItem('fitpulse_exercise_records')||'{}'); const l = r[currentEx.name]; if(l) { document.getElementById('activeExLastRecordText').innerText = `${l.weight} kg × ${l.reps} reps`; if(APP_STATE.activeSession.currentSetNum===1) { document.getElementById('activeInputWeight').value = l.weight; document.getElementById('activeInputReps').value = l.reps; } } else { document.getElementById('activeExLastRecordText').innerText = 'Primera vez en rutina'; } } catch(e){}
-      updateActiveWorkoutProgress(); if (window.lucide) lucide.createIcons();
-    }
+    function renderActiveExerciseView() { const routine = getCurrentRoutine(); const exIndex = APP_STATE.activeSession.exerciseIndex; const currentEx = routine.exercises[exIndex]; document.getElementById('activeMuscleLabel').innerText = currentEx.muscle || 'Músculo'; document.getElementById('activeExBadge').innerText = currentEx.name; document.getElementById('activeSetBadge').innerText = `Serie ${APP_STATE.activeSession.currentSetNum} (Meta: ${currentEx.targetSets})`; document.getElementById('activeInputWeight').value = currentEx.defaultWeight || 60; document.getElementById('activeInputReps').value = currentEx.defaultReps || 10; renderActiveExerciseSetsHistory(); document.getElementById('btnNavExAnterior').style.display = exIndex === 0 ? 'none' : 'flex'; document.getElementById('btnNavExSiguiente').style.display = exIndex === routine.exercises.length - 1 ? 'none' : 'flex'; try { const r = JSON.parse(localStorage.getItem('fitpulse_exercise_records')||'{}'); const l = r[currentEx.name]; if(l) { document.getElementById('activeExLastRecordText').innerText = `${l.weight} kg × ${l.reps} reps`; if(APP_STATE.activeSession.currentSetNum===1) { document.getElementById('activeInputWeight').value = l.weight; document.getElementById('activeInputReps').value = l.reps; } } else { document.getElementById('activeExLastRecordText').innerText = 'Primera vez en rutina'; } } catch(e){} updateActiveWorkoutProgress(); if (window.lucide) lucide.createIcons(); }
 
     function eliminarSerieDeSesion(id) { APP_STATE.series_entreno = APP_STATE.series_entreno.filter(s => s.id !== id); APP_STATE.activeSession.setsCompletedInSession = APP_STATE.activeSession.setsCompletedInSession.filter(s => s.id !== id); persistData(); renderActiveExerciseView(); renderSetsDashboard(); }
 
-    function renderActiveExerciseSetsHistory() {
-      const currentEx = getCurrentRoutine().exercises[APP_STATE.activeSession.exerciseIndex];
-      const sets = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr())));
-      const container = document.getElementById('activeExerciseSetsHistory');
-      if (sets.length === 0) { container.innerHTML = `<span class="text-xs opacity-60 italic">No hay series completadas aún.</span>`; return; }
-      container.innerHTML = sets.map((s, idx) => `<div class="flex items-center justify-between px-3 py-1.5 rounded-xl slate-item text-xs border-transparent"><span class="font-semibold opacity-80">Serie ${idx + 1}</span><span class="font-bold">${s.weight} kg × ${s.reps} reps</span><div class="flex items-center gap-2"><span class="text-[10px] text-emerald-500 font-bold">✓ Hecha</span><button onclick="eliminarSerieDeSesion(${s.id})" class="p-1 text-red-500 transition"><i class="w-3.5 h-3.5" data-lucide="x"></i></button></div></div>`).join('');
-    }
+    function renderActiveExerciseSetsHistory() { const currentEx = getCurrentRoutine().exercises[APP_STATE.activeSession.exerciseIndex]; const sets = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()))); const container = document.getElementById('activeExerciseSetsHistory'); if (sets.length === 0) { container.innerHTML = `<span class="text-xs opacity-60 italic">No hay series completadas aún.</span>`; return; } container.innerHTML = sets.map((s, idx) => `<div class="flex items-center justify-between px-3 py-1.5 rounded-xl slate-item text-xs border-transparent"><span class="font-semibold opacity-80">Serie ${idx + 1}</span><span class="font-bold">${s.weight} kg × ${s.reps} reps</span><div class="flex items-center gap-2"><span class="text-[10px] text-emerald-500 font-bold">✓ Hecha</span><button onclick="eliminarSerieDeSesion(${s.id})" class="p-1 text-red-500 transition"><i class="w-3.5 h-3.5" data-lucide="x"></i></button></div></div>`).join(''); }
 
     function completarSerieActiva() {
-      const routine = getCurrentRoutine(); const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex];
-      const weight = parseFloat(document.getElementById('activeInputWeight').value) || 0; const reps = parseInt(document.getElementById('activeInputReps').value) || 0;
-      
-      const syncSet = {
-        id: Date.now(),
-        routine_name: routine.name,
-        exercise_name: currentEx.name,
-        muscle: currentEx.muscle,
-        set_num: APP_STATE.activeSession.currentSetNum,
-        weight: weight,
-        reps: reps,
-        date_str: getTodayStr(),
-        time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      
+      const routine = getCurrentRoutine(); const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex]; const weight = parseFloat(document.getElementById('activeInputWeight').value) || 0; const reps = parseInt(document.getElementById('activeInputReps').value) || 0;
+      const syncSet = { id: Date.now(), routine_name: routine.name, exercise_name: currentEx.name, muscle: currentEx.muscle, set_num: APP_STATE.activeSession.currentSetNum, weight: weight, reps: reps, date_str: getTodayStr(), time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
       const localSet = {...syncSet, routineName: syncSet.routine_name, exerciseName: syncSet.exercise_name, setNum: syncSet.set_num, date: syncSet.date_str, time: syncSet.time_str};
-      APP_STATE.series_entreno.push(localSet); APP_STATE.activeSession.setsCompletedInSession.push(localSet);
-      persistData(); APP_STATE.activeSession.currentSetNum++; 
-
-      // NUEVO: ENVIAR A LA COLA OFFLINE-FIRST
+      APP_STATE.series_entreno.push(localSet); APP_STATE.activeSession.setsCompletedInSession.push(localSet); persistData(); APP_STATE.activeSession.currentSetNum++; 
       addToSyncQueue('series_log', syncSet);
-
       try { const r = JSON.parse(localStorage.getItem('fitpulse_exercise_records')||'{}'); r[currentEx.name] = { weight, reps, date: new Date().toLocaleDateString([], { day: '2-digit', month: '2-digit' }) }; localStorage.setItem('fitpulse_exercise_records', JSON.stringify(r)); } catch(e) {}
       renderActiveExerciseView(); renderSetsDashboard(); startRestTimer(90);
     }
@@ -1436,31 +1223,13 @@
     function cerrarConfirmFinalizar() { document.getElementById('modalConfirmFinalizar').classList.add('hidden'); }
     function ejecutarFinEntrenamiento() { cerrarConfirmFinalizar(); APP_STATE.activeSession.isRunning = false; APP_STATE.activeSession.exerciseIndex = 0; APP_STATE.activeSession.currentSetNum = 1; APP_STATE.activeSession.setsCompletedInSession = []; document.getElementById('panelActiveWorkoutSession').classList.add('hidden'); document.getElementById('btnStartOrResumeWorkoutText').innerText = 'Empezar Entrenamiento'; stopTimer(); switchTab('hoy'); }
 
-    function renderSetsDashboard() {
-      const countLabel = document.getElementById('dashSetsCount'); const container = document.getElementById('dashSetsList'); if (!countLabel || !container) return;
-      const filteredSets = APP_STATE.series_entreno.filter(s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()));
-      countLabel.innerText = `${filteredSets.length} completadas`;
-      if (filteredSets.length === 0) { container.innerHTML = `<div class="text-center py-6 text-xs opacity-60"><i class="w-6 h-6 mx-auto mb-1 opacity-40" data-lucide="calendar-x"></i>Aún no has registrado series.</div>`; if (window.lucide) lucide.createIcons(); return; }
-      container.innerHTML = filteredSets.slice().reverse().map(s => `<div class="flex items-center justify-between p-2.5 rounded-2xl slate-item text-xs border-transparent"><div><span class="font-bold">${s.exerciseName}</span><span class="text-[10px] opacity-60 block">${s.routineName} · Serie ${s.setNum}</span></div><div class="text-right"><span class="font-bold">${s.weight} kg × ${s.reps}</span><span class="text-[10px] opacity-60 block">${s.time}</span></div></div>`).join('');
-      if (window.lucide) lucide.createIcons();
-    }
+    function renderSetsDashboard() { const countLabel = document.getElementById('dashSetsCount'); const container = document.getElementById('dashSetsList'); if (!countLabel || !container) return; const filteredSets = APP_STATE.series_entreno.filter(s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr())); countLabel.innerText = `${filteredSets.length} completadas`; if (filteredSets.length === 0) { container.innerHTML = `<div class="text-center py-6 text-xs opacity-60"><i class="w-6 h-6 mx-auto mb-1 opacity-40" data-lucide="calendar-x"></i>Aún no has registrado series.</div>`; if (window.lucide) lucide.createIcons(); return; } container.innerHTML = filteredSets.slice().reverse().map(s => `<div class="flex items-center justify-between p-2.5 rounded-2xl slate-item text-xs border-transparent"><div><span class="font-bold">${s.exerciseName}</span><span class="text-[10px] opacity-60 block">${s.routineName} · Serie ${s.setNum}</span></div><div class="text-right"><span class="font-bold">${s.weight} kg × ${s.reps}</span><span class="text-[10px] opacity-60 block">${s.time}</span></div></div>`).join(''); if (window.lucide) lucide.createIcons(); }
 
-    function updateHistorialSummary() {
-      const summaryBox = document.getElementById('historialSetsSummary'); const summaryCount = document.getElementById('historialSetsCount'); if (!summaryBox) return;
-      const filteredSets = APP_STATE.series_entreno.filter(s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()));
-      summaryCount.innerText = `${filteredSets.length} series registradas`;
-      if (filteredSets.length === 0) { summaryBox.innerHTML = `<p class="text-xs opacity-60 text-center py-4">No hay entrenamientos completados registrados en esta sesión.</p>`; return; }
-      const grouped = {}; filteredSets.forEach(s => { if (!grouped[s.exerciseName]) grouped[s.exerciseName] = { sets: 0, maxWeight: 0, reps: 0 }; grouped[s.exerciseName].sets++; if (s.weight > grouped[s.exerciseName].maxWeight) grouped[s.exerciseName].maxWeight = s.weight; grouped[s.exerciseName].reps += s.reps; });
-      summaryBox.innerHTML = Object.entries(grouped).map(([name, data]) => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item text-xs border-transparent"><div><span class="font-bold">${name}</span><span class="text-[10px] opacity-60 block">${data.sets} series completadas</span></div><div class="text-right"><span class="font-bold">Max: ${data.maxWeight} kg</span><span class="text-[10px] opacity-60 block">${data.reps} reps totales</span></div></div>`).join('');
-    }
+    function updateHistorialSummary() { const summaryBox = document.getElementById('historialSetsSummary'); const summaryCount = document.getElementById('historialSetsCount'); if (!summaryBox) return; const filteredSets = APP_STATE.series_entreno.filter(s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr())); summaryCount.innerText = `${filteredSets.length} series registradas`; if (filteredSets.length === 0) { summaryBox.innerHTML = `<p class="text-xs opacity-60 text-center py-4">No hay entrenamientos completados registrados en esta sesión.</p>`; return; } const grouped = {}; filteredSets.forEach(s => { if (!grouped[s.exerciseName]) grouped[s.exerciseName] = { sets: 0, maxWeight: 0, reps: 0 }; grouped[s.exerciseName].sets++; if (s.weight > grouped[s.exerciseName].maxWeight) grouped[s.exerciseName].maxWeight = s.weight; grouped[s.exerciseName].reps += s.reps; }); summaryBox.innerHTML = Object.entries(grouped).map(([name, data]) => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item text-xs border-transparent"><div><span class="font-bold">${name}</span><span class="text-[10px] opacity-60 block">${data.sets} series completadas</span></div><div class="text-right"><span class="font-bold">Max: ${data.maxWeight} kg</span><span class="text-[10px] opacity-60 block">${data.reps} reps totales</span></div></div>`).join(''); }
 
     function openModalGestion() { document.getElementById('modalGestion').classList.remove('hidden'); renderGestionRutinas(); renderGestionEjercicios(); if (window.lucide) lucide.createIcons(); }
     function closeModalGestion() { document.getElementById('modalGestion').classList.add('hidden'); }
-    function switchGestionTab(tab) {
-      const active = "py-2 rounded-full btn-primary shadow-sm transition"; const inactive = "py-2 rounded-full opacity-60 hover:opacity-100 transition";
-      if (tab === 'rutinas') { document.getElementById('tabBtnGestionRutinas').className = active; document.getElementById('tabBtnGestionEjercicios').className = inactive; document.getElementById('sectionGestionRutinas').classList.remove('hidden'); document.getElementById('sectionGestionEjercicios').classList.add('hidden'); }
-      else { document.getElementById('tabBtnGestionEjercicios').className = active; document.getElementById('tabBtnGestionRutinas').className = inactive; document.getElementById('sectionGestionEjercicios').classList.remove('hidden'); document.getElementById('sectionGestionRutinas').classList.add('hidden'); }
-    }
+    function switchGestionTab(tab) { const active = "py-2 rounded-full btn-primary shadow-sm transition"; const inactive = "py-2 rounded-full opacity-60 hover:opacity-100 transition"; if (tab === 'rutinas') { document.getElementById('tabBtnGestionRutinas').className = active; document.getElementById('tabBtnGestionEjercicios').className = inactive; document.getElementById('sectionGestionRutinas').classList.remove('hidden'); document.getElementById('sectionGestionEjercicios').classList.add('hidden'); } else { document.getElementById('tabBtnGestionEjercicios').className = active; document.getElementById('tabBtnGestionRutinas').className = inactive; document.getElementById('sectionGestionEjercicios').classList.remove('hidden'); document.getElementById('sectionGestionRutinas').classList.add('hidden'); } }
     function renderGestionRutinas() { document.getElementById('listaRutinasGestion').innerHTML = APP_STATE.routines.map(r => `<div class="p-3 rounded-2xl slate-item border ${r.id === APP_STATE.selectedRoutineId ? '!border-emerald-500' : ''} flex items-center justify-between text-xs mb-2 transition-all"><div class="flex-1 pr-2 cursor-pointer" onclick="seleccionarRutinaDesdeModal('${r.id}')"><div class="flex items-center gap-1.5 mb-0.5"><h4 class="font-bold ${r.id === APP_STATE.selectedRoutineId ? 'text-emerald-600 dark:text-emerald-400' : ''}">${r.name}</h4></div><p class="text-[11px] opacity-60">${r.desc} (${r.exercises.length} ejercicios)</p></div><div class="flex items-center gap-1"><button onclick="eliminarRutina('${r.id}')" class="p-1.5 opacity-60 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons(); }
     function renderGestionEjercicios() { const r = getCurrentRoutine(); document.getElementById('listaEjerciciosCatalogo').innerHTML = `<div class="mb-3 pb-2 border-b border-[var(--app-border)] text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Añadiendo a: <span class="var(--text-main)">${r.name}</span></div>` + (!r.exercises.length ? `<p class="text-xs opacity-60 text-center py-4">Sin ejercicios.</p>` : r.exercises.map((c, idx) => `<div class="p-2.5 rounded-xl slate-item flex items-center justify-between text-xs mb-2 border-transparent"><div><span class="font-medium">${c.name}</span><span class="text-[10px] opacity-60 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 ml-2">${c.muscle}</span></div><button onclick="eliminarEjercicio(${idx})" class="p-1 opacity-60 text-red-500"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div>`).join('')); if (window.lucide) lucide.createIcons(); }
     function crearNuevaRutina() { const n = document.getElementById('nuevaRutinaNombre').value.trim(); const d = document.getElementById('nuevaRutinaDesc').value.trim(); if (!n) return; const id = 'r_' + Date.now(); APP_STATE.routines.push({ id, name: n, desc: d || 'Personalizada', exercises: [] }); APP_STATE.selectedRoutineId = id; persistData(); document.getElementById('nuevaRutinaNombre').value = ''; document.getElementById('nuevaRutinaDesc').value = ''; renderGestionRutinas(); renderRoutineCards(); renderPreviewRoutine(); renderGestionEjercicios(); switchGestionTab('ejercicios'); }
