@@ -840,39 +840,62 @@
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
-    const DEFAULT_ROUTINES = [
+   const DEFAULT_ROUTINES = [
       { 
-        id: 'r_empuje', 
-        name: 'Empuje', 
-        desc: 'Pecho, Hombro y Tríceps', 
+        id: 'r_torso_1', 
+        name: 'Torso 1', 
+        desc: 'Fuerza (Hipertrofia/Potencia)', 
         exercises: [
-          { name: 'Press Banca', targetSets: 4, muscle: 'Pecho', defaultWeight: 70, defaultReps: 8 },
-          { name: 'Press Militar con Mancuernas', targetSets: 4, muscle: 'Hombro', defaultWeight: 22, defaultReps: 10 },
-          { name: 'Fondos en Paralelas', targetSets: 3, muscle: 'Tríceps', defaultWeight: 0, defaultReps: 12 }
+          { name: 'Press inclinado mancuernas 30° (Tempo 3-1-1-0)', targetSets: 3, muscle: 'Pecho', defaultWeight: 24, defaultReps: 8 },
+          { name: 'Jalón al pecho neutro (1s pausa isométrica)', targetSets: 3, muscle: 'Espalda', defaultWeight: 50, defaultReps: 10 },
+          { name: 'Pek Dek Contractora (Control excéntrico)', targetSets: 3, muscle: 'Pecho', defaultWeight: 35, defaultReps: 12 },
+          { name: 'Remo polea baja estrecho (Máx. retracción)', targetSets: 3, muscle: 'Espalda', defaultWeight: 45, defaultReps: 10 },
+          { name: 'Curl bíceps banco inclinado', targetSets: 3, muscle: 'Bíceps', defaultWeight: 12, defaultReps: 12 },
+          { name: 'Ext. tríceps polea barra (Codos fijos)', targetSets: 3, muscle: 'Tríceps', defaultWeight: 15, defaultReps: 12 },
+          { name: 'Movilidad: Descompresión barra + Pectoral', targetSets: 3, muscle: 'Core', defaultWeight: 0, defaultReps: 45 }
         ] 
       },
       { 
-        id: 'r_tiron', 
-        name: 'Tirón', 
-        desc: 'Espalda y Bíceps', 
+        id: 'r_pierna_1', 
+        name: 'Pierna 1', 
+        desc: 'Fuerza (Hipertrofia/Potencia)', 
         exercises: [
-          { name: 'Dominadas', targetSets: 4, muscle: 'Espalda', defaultWeight: 0, defaultReps: 8 },
-          { name: 'Remo con Barra', targetSets: 4, muscle: 'Espalda', defaultWeight: 65, defaultReps: 10 },
-          { name: 'Curl Bíceps Barra Z', targetSets: 3, muscle: 'Bíceps', defaultWeight: 30, defaultReps: 10 }
+          { name: 'Prensa inclinada 45° (Exc. 3s, sin bloqueo)', targetSets: 3, muscle: 'Pierna', defaultWeight: 120, defaultReps: 10 },
+          { name: 'Extensiones cuádriceps máquina', targetSets: 3, muscle: 'Pierna', defaultWeight: 45, defaultReps: 12 },
+          { name: 'Curl femoral tumbado (Exc. estricta)', targetSets: 3, muscle: 'Pierna', defaultWeight: 35, defaultReps: 10 },
+          { name: 'Elevaciones laterales mancuernas', targetSets: 3, muscle: 'Hombro', defaultWeight: 10, defaultReps: 15 },
+          { name: 'Plancha RKC / Rueda abdominal', targetSets: 3, muscle: 'Core', defaultWeight: 0, defaultReps: 10 },
+          { name: 'Movilidad: Cadera 90/90 + Rodillo', targetSets: 1, muscle: 'Pierna', defaultWeight: 0, defaultReps: 2 }
         ] 
       },
       { 
-        id: 'r_pierna', 
-        name: 'Pierna', 
-        desc: 'Cuádriceps, Isquios y Core', 
+        id: 'r_torso_2', 
+        name: 'Torso 2', 
+        desc: 'Fuerza (Hipertrofia/Potencia)', 
         exercises: [
-          { name: 'Sentadilla Trasera', targetSets: 4, muscle: 'Pierna', defaultWeight: 90, defaultReps: 8 },
-          { name: 'Prensa Inclinada', targetSets: 4, muscle: 'Pierna', defaultWeight: 160, defaultReps: 12 },
-          { name: 'Elevación Gemelos', targetSets: 4, muscle: 'Pierna', defaultWeight: 50, defaultReps: 15 }
+          { name: 'Press militar mancuernas sentado (Bajada control.)', targetSets: 3, muscle: 'Hombro', defaultWeight: 18, defaultReps: 8 },
+          { name: 'Remo soporte en pecho (1s pausa isométrica)', targetSets: 3, muscle: 'Espalda', defaultWeight: 20, defaultReps: 10 },
+          { name: 'Pek Dek Contractora', targetSets: 3, muscle: 'Pecho', defaultWeight: 35, defaultReps: 12 },
+          { name: 'Jalón unilateral / Remo neutro medio', targetSets: 3, muscle: 'Espalda', defaultWeight: 25, defaultReps: 12 },
+          { name: 'Curl bíceps polea baja barra (Tensión cont.)', targetSets: 3, muscle: 'Bíceps', defaultWeight: 20, defaultReps: 12 },
+          { name: 'Ext. tríceps polea cuerda (Apertura bloqueo)', targetSets: 3, muscle: 'Tríceps', defaultWeight: 12, defaultReps: 12 },
+          { name: 'Movilidad: Apertura torácica + Dislocaciones', targetSets: 3, muscle: 'Hombro', defaultWeight: 0, defaultReps: 12 }
+        ] 
+      },
+      { 
+        id: 'r_pierna_2', 
+        name: 'Pierna 2', 
+        desc: 'Fuerza (Hipertrofia/Potencia)', 
+        exercises: [
+          { name: 'Peso muerto rumano manc. (Tempo 3-0-1-0)', targetSets: 3, muscle: 'Pierna', defaultWeight: 26, defaultReps: 10 },
+          { name: 'Prensa (Pies altos y separados)', targetSets: 3, muscle: 'Pierna', defaultWeight: 140, defaultReps: 12 },
+          { name: 'Curl femoral sentado', targetSets: 3, muscle: 'Pierna', defaultWeight: 45, defaultReps: 12 },
+          { name: 'Elevaciones laterales polea / manc.', targetSets: 3, muscle: 'Hombro', defaultWeight: 7, defaultReps: 15 },
+          { name: 'Rueda abdominal / Elev. piernas', targetSets: 3, muscle: 'Core', defaultWeight: 0, defaultReps: 12 },
+          { name: 'Movilidad: Ext. torácica + Estiram. glúteo', targetSets: 1, muscle: 'Pierna', defaultWeight: 0, defaultReps: 2 }
         ] 
       }
     ];
-
     const DEFAULT_FOODS = [
       { name: 'Pechuga de Pollo', unit: 'g', baseQty: 100, kcal: 165, prot: 31, carb: 0, gras: 3.6 },
       { name: 'Avena en Copos', unit: 'g', baseQty: 100, kcal: 389, prot: 16.9, carb: 66.3, gras: 6.9 },
