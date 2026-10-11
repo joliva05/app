@@ -129,7 +129,7 @@
     @keyframes tabFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     main > section:not(.hidden) { animation: tabFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; }
     @keyframes modalPop { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    #quickActionCard, #modalMetas > div, #modalGestion > div, #modalCrearAlimento > div, #modalConfirmFinalizar > div, #modalGestionAlimentos > div, #modalConfigComidas > div, #modalSync > div { 
+    #quickActionCard, #modalMetas > div, #modalGestion > div, #modalCrearAlimento > div, #modalConfirmFinalizar > div, #modalGestionAlimentos > div, #modalConfigComidas > div, #modalSync > div, #modalMacrosRapidos > div { 
       animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; 
     }
   </style>
@@ -145,7 +145,6 @@
           </div>
           <div>
             <h2 class="text-base font-bold tracking-tight">FitPulse</h2>
-            <p class="text-[11px] opacity-60">Offline-First v3.6</p>
           </div>
         </div>
         <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="toggleNavDrawer(false)">
@@ -190,7 +189,7 @@
       </div>
     </div>
     <div class="pt-4 border-t border-[var(--app-border)] flex items-center justify-between text-xs opacity-60">
-      <span>FitPulse · v3.6</span>
+      <span>FitPulse</span>
       <button class="hover:opacity-100 transition" onclick="toggleNavDrawer(false)">Cerrar</button>
     </div>
   </aside>
@@ -262,7 +261,7 @@
           </div>
           <div class="flex items-center gap-2">
             <span class="text-xs opacity-60">Meta: <strong class="font-semibold opacity-100" id="dashMetaKcalLabel">2400 kcal</strong></span>
-            <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition active:scale-95" id="editCaloriesBtn" onclick="openModalMetas()">
+            <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition active:scale-95" onclick="openModalMetas()">
               <i class="w-3.5 h-3.5" data-lucide="pencil"></i>
             </button>
           </div>
@@ -454,10 +453,14 @@
       <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4">
         <div class="flex items-center justify-between">
           <h3 class="text-xs font-semibold uppercase tracking-wider opacity-60">Añadir Alimento</h3>
-          <button class="px-3 py-1.5 rounded-full slate-item text-xs font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="openModalCrearAlimento()">
-            <i class="w-3.5 h-3.5" data-lucide="plus"></i>
-            <span>Crear Alimento</span>
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button class="px-2.5 py-1.5 rounded-full bg-blue-500/10 text-blue-500 dark:text-blue-400 text-[11px] font-bold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="openModalMacrosRapidos()">
+              <i class="w-3 h-3" data-lucide="zap"></i> Macros
+            </button>
+            <button class="px-2.5 py-1.5 rounded-full slate-item text-[11px] font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="openModalCrearAlimento()">
+              <i class="w-3 h-3" data-lucide="plus"></i> Crear
+            </button>
+          </div>
         </div>
         <div class="relative">
           <input autocomplete="off" class="w-full slate-input rounded-2xl px-4 py-3 text-xs font-medium focus:outline-none" id="foodSearchInput" oninput="onFoodSearchInput(this.value)" placeholder="Buscar alimento..." type="text">
@@ -497,9 +500,11 @@
     <section class="space-y-4 hidden" id="tab-historial">
       <div>
         <span class="text-[11px] uppercase tracking-wider font-semibold opacity-60">Registro Histórico</span>
-        <h2 class="text-xl font-bold tracking-tight">Historial y Resumen</h2>
+        <h2 class="text-xl font-bold tracking-tight" id="historialMainTitle">Historial de Hoy</h2>
       </div>
-      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-3">
+      <div class="grid grid-cols-7 gap-1.5 pt-1" id="weekSelectorContainerHistorial"></div>
+      
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-3 mt-4">
         <div class="flex items-center justify-between pb-2 border-b border-[var(--app-border)]">
           <span class="text-xs font-semibold uppercase tracking-wider opacity-60">Balance del Día</span>
           <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full slate-item" id="historialStatus">En Objetivo</span>
@@ -600,6 +605,15 @@
             <p class="subtext text-[11px] opacity-60">Comienza tu rutina diaria guiada</p>
           </div>
         </button>
+        <button class="quick-action-item w-full p-3 rounded-2xl slate-item hover:opacity-80 flex items-center gap-3 text-left transition" onclick="closeQuickActionSheet(); openModalMacrosRapidos();">
+          <div class="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <i class="w-5 h-5 opacity-80" data-lucide="zap"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold">Añadir Macros Rápidos</p>
+            <p class="subtext text-[11px] opacity-60">Suma proteína, carbs o grasas sueltas</p>
+          </div>
+        </button>
         <button class="quick-action-item w-full p-3 rounded-2xl slate-item hover:opacity-80 flex items-center gap-3 text-left transition" onclick="closeQuickActionSheet(); openModalGestion();">
           <div class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
             <i class="w-5 h-5 opacity-80" data-lucide="settings-2"></i>
@@ -643,6 +657,48 @@
       </div>
       <div class="pt-2">
         <button class="w-full py-3 rounded-full slate-item text-xs font-bold uppercase tracking-wider transition hover:opacity-80" onclick="closeModalMetas()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalMacrosRapidos">
+    <div class="slate-card w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+        <div class="flex items-center gap-2">
+          <i class="w-5 h-5 text-blue-500 dark:text-blue-400" data-lucide="zap"></i>
+          <h3 class="text-base font-bold">Añadir Macros</h3>
+        </div>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalMacrosRapidos()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Concepto (Opcional)</label>
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="quickMacroName" placeholder="Ej. Pinchos, Aceite, Extras..."/>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[10px] font-semibold text-rose-500 mb-1">Prot (g)</label>
+            <input class="w-full slate-input rounded-2xl px-2 py-2 text-xl text-center font-bold" id="quickMacroProt" placeholder="0" type="number" oninput="calcQuickMacroKcal()"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-sky-500 mb-1">Carb (g)</label>
+            <input class="w-full slate-input rounded-2xl px-2 py-2 text-xl text-center font-bold" id="quickMacroCarb" placeholder="0" type="number" oninput="calcQuickMacroKcal()"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-amber-500 mb-1">Gras (g)</label>
+            <input class="w-full slate-input rounded-2xl px-2 py-2 text-xl text-center font-bold" id="quickMacroGras" placeholder="0" type="number" oninput="calcQuickMacroKcal()"/>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-[var(--app-border)]">
+          <label class="block text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1 text-center">Calorías Calculadas</label>
+          <input class="w-full slate-input rounded-2xl px-4 py-2.5 text-2xl font-bold text-center bg-black/5 dark:bg-white/5 opacity-60 pointer-events-none" id="quickMacroKcal" value="0" readonly/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button class="py-3 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalMacrosRapidos()">Cancelar</button>
+        <button class="py-3 rounded-full btn-primary text-xs font-bold uppercase tracking-wider transition hover:opacity-90 shadow-md" onclick="guardarMacrosRapidos()">Añadir al Diario</button>
       </div>
     </div>
   </div>
@@ -1033,7 +1089,6 @@
     function closeQuickActionSheet() { document.getElementById('modalAccionRapida').classList.add('hidden'); }
 
     function renderWeekSelector() {
-      const container = document.getElementById('weekSelectorContainer'); if (!container) return;
       const curr = new Date(); const dayOfWeek = curr.getDay() || 7; 
       const monday = new Date(curr); monday.setDate(curr.getDate() - dayOfWeek + 1);
       const daysMap = ['L', 'M', 'X', 'J', 'V', 'S', 'D']; let html = '';
@@ -1044,7 +1099,10 @@
         const isSelected = dateStr === APP_STATE.selectedDate;
         html += `<button onclick="selectDate('${dateStr}')" class="day-btn ${isSelected?'active shadow-lg font-bold':'slate-item font-semibold'} flex flex-col items-center py-2 px-1 rounded-2xl text-center active:scale-95 transition"><span class="text-[10px] uppercase ${isSelected?'opacity-80':'opacity-60'}">${daysMap[i]}</span><span class="text-xs mt-0.5">${dayNum}</span></button>`;
       }
-      container.innerHTML = html;
+      ['weekSelectorContainer', 'weekSelectorContainerHistorial'].forEach(id => {
+        const container = document.getElementById(id);
+        if (container) container.innerHTML = html;
+      });
     }
 
     function selectDate(dateStr) {
@@ -1053,16 +1111,25 @@
       updateNutritionDashboard(); 
       renderTodayMeals(); 
       renderSetsDashboard();
+      updateHistorialSummary();
       
-      const titleEl = document.getElementById('mainDashboardTitle'); const subTitleEl = document.getElementById('mainDashboardSubtitle'); const todayStr = getTodayStr();
+      const titleEl = document.getElementById('mainDashboardTitle'); 
+      const subTitleEl = document.getElementById('mainDashboardSubtitle'); 
+      const histTitleEl = document.getElementById('historialMainTitle');
+      const todayStr = getTodayStr();
+      
       if (titleEl) {
         if (dateStr === todayStr) {
           titleEl.innerText = 'hoy.'; subTitleEl.innerText = 'progreso diario';
-          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados Hoy'; document.getElementById('todaySetsSectionTitle').innerText = 'Series de Hoy';
+          if (histTitleEl) histTitleEl.innerText = 'Historial de Hoy';
+          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados Hoy'; 
+          document.getElementById('todaySetsSectionTitle').innerText = 'Series de Hoy';
         } else {
           const parts = dateStr.split('-');
           titleEl.innerText = `${parts[2]}/${parts[1]}.`; subTitleEl.innerText = 'registro histórico';
-          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados'; document.getElementById('todaySetsSectionTitle').innerText = 'Series Registradas';
+          if (histTitleEl) histTitleEl.innerText = `Historial del ${parts[2]}/${parts[1]}`;
+          document.getElementById('todayMealsSectionTitle').innerText = 'Alimentos Registrados'; 
+          document.getElementById('todaySetsSectionTitle').innerText = 'Series Registradas';
         }
       }
     }
@@ -1079,22 +1146,15 @@
     let syncMetasTimeout = null;
     
     function autoSaveGoals() {
-      // 1. Leer y calcular al vuelo
       APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 0;
       APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 0;
       APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 0;
       APP_STATE.goals.kcal = Math.round((APP_STATE.goals.protein * 4) + (APP_STATE.goals.carbs * 4) + (APP_STATE.goals.fat * 9));
 
-      // 2. Reflejar la suma en el input de solo lectura del modal
       document.getElementById('goalKcalInput').value = APP_STATE.goals.kcal;
-
-      // 3. Guardar en memoria local al instante
       localStorage.setItem('fitpulse_goals', JSON.stringify(APP_STATE.goals));
-
-      // 4. Actualizar el Dashboard por detrás en tiempo real
       updateNutritionDashboard();
 
-      // 5. Añadir a la cola de Supabase con "debounce" para no saturar la red
       clearTimeout(syncMetasTimeout);
       syncMetasTimeout = setTimeout(() => {
         addToSyncQueue('metas_usuario', { 
@@ -1109,6 +1169,62 @@
     
     function closeModalMetas() { 
       document.getElementById('modalMetas').classList.add('hidden'); 
+    }
+
+    function openModalMacrosRapidos() {
+      document.getElementById('quickMacroName').value = '';
+      document.getElementById('quickMacroProt').value = '';
+      document.getElementById('quickMacroCarb').value = '';
+      document.getElementById('quickMacroGras').value = '';
+      document.getElementById('quickMacroKcal').value = '0';
+      document.getElementById('modalMacrosRapidos').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeModalMacrosRapidos() {
+      document.getElementById('modalMacrosRapidos').classList.add('hidden');
+    }
+
+    function calcQuickMacroKcal() {
+      const p = parseFloat(document.getElementById('quickMacroProt').value) || 0;
+      const c = parseFloat(document.getElementById('quickMacroCarb').value) || 0;
+      const g = parseFloat(document.getElementById('quickMacroGras').value) || 0;
+      document.getElementById('quickMacroKcal').value = Math.round((p * 4) + (c * 4) + (g * 9));
+    }
+
+    function guardarMacrosRapidos() {
+      const name = document.getElementById('quickMacroName').value.trim() || 'Añadido Rápido';
+      const p = parseFloat(document.getElementById('quickMacroProt').value) || 0;
+      const c = parseFloat(document.getElementById('quickMacroCarb').value) || 0;
+      const g = parseFloat(document.getElementById('quickMacroGras').value) || 0;
+      const kcal = Math.round((p * 4) + (c * 4) + (g * 9));
+
+      if (kcal === 0 && p === 0 && c === 0 && g === 0) {
+        alert('Introduce algún macronutriente.');
+        return;
+      }
+
+      const meal = { 
+        id: Date.now(), 
+        name: name, 
+        meal_type: APP_STATE.currentMealType, 
+        qty: 1, 
+        unit: 'ud', 
+        kcal: kcal, 
+        prot: p, 
+        carb: c, 
+        gras: g, 
+        date_str: getTodayStr(), 
+        time_str: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      };
+      
+      const uiMeal = {...meal, mealType: meal.meal_type, date: meal.date_str, time: meal.time_str};
+      APP_STATE.comidas_diarias.push(uiMeal); 
+      persistData(); 
+      renderTodayMeals(); 
+      updateNutritionDashboard();
+      addToSyncQueue('comidas_log', meal);
+      closeModalMacrosRapidos();
     }
 
     function openModalGestionAlimentos() { document.getElementById('modalGestionAlimentos').classList.remove('hidden'); renderGestionAlimentos(); if (window.lucide) lucide.createIcons(); }
