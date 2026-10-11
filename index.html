@@ -192,7 +192,7 @@
       </div>
     </div>
     <div class="pt-4 border-t border-[var(--app-border)] flex items-center justify-between text-xs opacity-60">
-      <span>FitPulse · Stoic v2.7</span>
+      <span>FitPulse · Stoic v2.8</span>
       <button class="hover:opacity-100 transition" onclick="toggleNavDrawer(false)">Cerrar</button>
     </div>
   </aside>
@@ -870,7 +870,7 @@
         name: 'Pierna 1', 
         desc: 'Fuerza', 
         exercises: [
-          { name: 'Prensa inclinada 45°', targetSets: 3, muscle: 'Pierna', defaultWeight: 120, defaultReps: 10 },
+          { name: 'Prensa inclinada a 45°', targetSets: 3, muscle: 'Pierna', defaultWeight: 120, defaultReps: 10 },
           { name: 'Extensiones cuádriceps máquina', targetSets: 3, muscle: 'Pierna', defaultWeight: 45, defaultReps: 12 },
           { name: 'Curl femoral tumbado', targetSets: 3, muscle: 'Pierna', defaultWeight: 35, defaultReps: 10 },
           { name: 'Elevaciones laterales mancuernas', targetSets: 3, muscle: 'Hombro', defaultWeight: 10, defaultReps: 15 },
@@ -883,10 +883,10 @@
         desc: 'Fuerza', 
         exercises: [
           { name: 'Press militar mancuernas sentado', targetSets: 3, muscle: 'Hombro', defaultWeight: 18, defaultReps: 8 },
-          { name: 'Remo soporte en pecho', targetSets: 3, muscle: 'Espalda', defaultWeight: 20, defaultReps: 10 },
+          { name: 'Remo con soporte en pecho', targetSets: 3, muscle: 'Espalda', defaultWeight: 20, defaultReps: 10 },
           { name: 'Pek Dek Contractora', targetSets: 3, muscle: 'Pecho', defaultWeight: 35, defaultReps: 12 },
           { name: 'Jalón unilateral o Remo neutro', targetSets: 3, muscle: 'Espalda', defaultWeight: 25, defaultReps: 12 },
-          { name: 'Curl bíceps polea baja barra', targetSets: 3, muscle: 'Bíceps', defaultWeight: 20, defaultReps: 12 },
+          { name: 'Curl bíceps polea baja', targetSets: 3, muscle: 'Bíceps', defaultWeight: 20, defaultReps: 12 },
           { name: 'Ext. tríceps polea cuerda', targetSets: 3, muscle: 'Tríceps', defaultWeight: 12, defaultReps: 12 }
         ] 
       },
@@ -895,10 +895,10 @@
         name: 'Pierna 2', 
         desc: 'Fuerza', 
         exercises: [
-          { name: 'Peso muerto rumano manc.', targetSets: 3, muscle: 'Pierna', defaultWeight: 26, defaultReps: 10 },
+          { name: 'Peso muerto rumano mancuernas', targetSets: 3, muscle: 'Pierna', defaultWeight: 26, defaultReps: 10 },
           { name: 'Prensa de piernas', targetSets: 3, muscle: 'Pierna', defaultWeight: 140, defaultReps: 12 },
           { name: 'Curl femoral sentado', targetSets: 3, muscle: 'Pierna', defaultWeight: 45, defaultReps: 12 },
-          { name: 'Elevaciones laterales polea o manc.', targetSets: 3, muscle: 'Hombro', defaultWeight: 7, defaultReps: 15 },
+          { name: 'Elevaciones laterales polea', targetSets: 3, muscle: 'Hombro', defaultWeight: 7, defaultReps: 15 },
           { name: 'Rueda abdominal o Elev. piernas', targetSets: 3, muscle: 'Core', defaultWeight: 0, defaultReps: 12 }
         ] 
       }
@@ -2155,17 +2155,19 @@
 
     /* BACKUP / RESTORE */
     function exportBackup() {
+      persistData();
+      
       const data = {
-        fitpulse_today_meals: localStorage.getItem('fitpulse_today_meals'),
-        fitpulse_today_sets: localStorage.getItem('fitpulse_today_sets'),
-        fitpulse_goals: localStorage.getItem('fitpulse_goals'),
-        fitpulse_routines: localStorage.getItem('fitpulse_routines'),
-        fitpulse_custom_foods: localStorage.getItem('fitpulse_custom_foods'),
-        fitpulse_meal_types: localStorage.getItem('fitpulse_meal_types'),
-        fitpulse_exercise_records: localStorage.getItem('fitpulse_exercise_records')
+        fitpulse_today_meals: APP_STATE.comidas_diarias,
+        fitpulse_today_sets: APP_STATE.series_entreno,
+        fitpulse_goals: APP_STATE.goals,
+        fitpulse_routines: APP_STATE.routines,
+        fitpulse_custom_foods: APP_STATE.alimentos_base,
+        fitpulse_meal_types: APP_STATE.mealTypes,
+        fitpulse_exercise_records: JSON.parse(localStorage.getItem('fitpulse_exercise_records') || '{}')
       };
       
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -2192,7 +2194,7 @@
           if (data && typeof data === 'object') {
             Object.keys(data).forEach(key => {
               if (data[key] !== null && data[key] !== undefined) {
-                localStorage.setItem(key, data[key]);
+                localStorage.setItem(key, JSON.stringify(data[key]));
               }
             });
             alert('Datos restaurados correctamente. La aplicación se reiniciará para aplicar los cambios.');
