@@ -1153,14 +1153,28 @@
       container.innerHTML = filteredMeals.map(m => `<div class="flex items-center justify-between p-3 rounded-2xl slate-item transition"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">${m.mealType[0]}</div><div><h4 class="text-xs font-bold">${m.name}</h4><p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p></div></div><div class="flex items-center gap-2"><div class="text-right"><span class="text-xs font-bold block">${m.kcal} kcal</span><span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span></div><button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div></div>`).join(''); if (window.lucide) lucide.createIcons();
     }
 
-    function updateNutritionDashboard() {
+   function updateNutritionDashboard() {
       const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
       const totals = filteredMeals.reduce((acc, cur) => { acc.kcal += cur.kcal; acc.prot += cur.prot; acc.carb += cur.carb; acc.gras += cur.gras; return acc; }, { kcal: 0, prot: 0, carb: 0, gras: 0 });
+      
+      // Actualizar barras de progreso
       document.getElementById('dashKcalTotal').innerText = totals.kcal; const pctKcal = Math.min(Math.round((totals.kcal / APP_STATE.goals.kcal) * 100), 100) || 0; document.getElementById('dashKcalPercent').innerText = `${pctKcal}%`; document.getElementById('dashKcalBar').style.width = `${pctKcal}%`;
       document.getElementById('dashProtVal').innerText = `${Math.round(totals.prot)}g`; const pctProt = Math.min(Math.round((totals.prot / APP_STATE.goals.protein) * 100), 100) || 0; document.getElementById('dashProtPct').innerText = `${pctProt}%`; document.getElementById('dashProtBar').style.width = `${pctProt}%`;
       document.getElementById('dashCarbVal').innerText = `${Math.round(totals.carb)}g`; const pctCarb = Math.min(Math.round((totals.carb / APP_STATE.goals.carbs) * 100), 100) || 0; document.getElementById('dashCarbPct').innerText = `${pctCarb}%`; document.getElementById('dashCarbBar').style.width = `${pctCarb}%`;
       document.getElementById('dashGrasVal').innerText = `${Math.round(totals.gras)}g`; const pctGras = Math.min(Math.round((totals.gras / APP_STATE.goals.fat) * 100), 100) || 0; document.getElementById('dashGrasPct').innerText = `${pctGras}%`; document.getElementById('dashGrasBar').style.width = `${pctGras}%`;
-      document.getElementById('histKcalVal').innerText = totals.kcal; document.getElementById('histKcalTarget').innerText = `/ ${APP_STATE.goals.kcal}`; document.getElementById('histProtVal').innerText = `${Math.round(totals.prot)}g`; document.getElementById('histProtTarget').innerText = `/ ${APP_STATE.goals.protein}g`; document.getElementById('histCarbVal').innerText = `${Math.round(totals.carb)}g`; document.getElementById('histCarbTarget').innerText = `/ ${APP_STATE.goals.carbs}g`; document.getElementById('histGrasVal').innerText = `${Math.round(totals.gras)}g`; document.getElementById('histGrasTarget').innerText = `/ ${APP_STATE.goals.fat}g`;
+      
+      // REFRESCAR LOS TEXTOS DE METAS EN LA PANTALLA HOY
+      document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`;
+      document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`;
+      document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`;
+      document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`;
+      document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`;
+
+      // REFRESCAR LOS TEXTOS DE METAS EN LA PANTALLA HISTORIAL
+      document.getElementById('histKcalVal').innerText = totals.kcal; document.getElementById('histKcalTarget').innerText = `/ ${APP_STATE.goals.kcal}`; 
+      document.getElementById('histProtVal').innerText = `${Math.round(totals.prot)}g`; document.getElementById('histProtTarget').innerText = `/ ${APP_STATE.goals.protein}g`; 
+      document.getElementById('histCarbVal').innerText = `${Math.round(totals.carb)}g`; document.getElementById('histCarbTarget').innerText = `/ ${APP_STATE.goals.carbs}g`; 
+      document.getElementById('histGrasVal').innerText = `${Math.round(totals.gras)}g`; document.getElementById('histGrasTarget').innerText = `/ ${APP_STATE.goals.fat}g`;
     }
 
     function openModalCrearAlimento() { document.getElementById('customFoodName').value = ''; document.getElementById('customFoodKcal').value = ''; document.getElementById('customFoodProt').value = ''; document.getElementById('customFoodCarb').value = ''; document.getElementById('customFoodGras').value = ''; document.getElementById('modalCrearAlimento').classList.remove('hidden'); if (window.lucide) lucide.createIcons(); }
