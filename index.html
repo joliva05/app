@@ -695,15 +695,18 @@
         <div class="pt-3 border-t border-[var(--app-border)] space-y-2.5">
           <h4 class="text-xs font-bold uppercase tracking-wider opacity-60">Añadir Ejercicio</h4>
           <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevoEjercicioNombre" placeholder="Nombre (ej. Elevaciones Laterales)"/>
-          <select class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevoEjercicioMusculo">
-            <option value="Pecho">Pecho</option>
-            <option value="Espalda">Espalda</option>
-            <option value="Pierna">Pierna</option>
-            <option value="Hombro">Hombro</option>
-            <option value="Bíceps">Bíceps</option>
-            <option value="Tríceps">Tríceps</option>
-            <option value="Core">Core</option>
-          </select>
+          <div class="grid grid-cols-2 gap-2">
+            <select class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevoEjercicioMusculo">
+              <option value="Pecho">Pecho</option>
+              <option value="Espalda">Espalda</option>
+              <option value="Pierna">Pierna</option>
+              <option value="Hombro">Hombro</option>
+              <option value="Bíceps">Bíceps</option>
+              <option value="Tríceps">Tríceps</option>
+              <option value="Core">Core</option>
+            </select>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs text-center" id="nuevoEjercicioSeries" type="number" placeholder="Nº Series (Meta)" value="4" min="1"/>
+          </div>
           <button class="w-full py-2.5 rounded-full btn-primary font-bold text-xs uppercase hover:opacity-90 transition" onclick="crearNuevoEjercicioCatalogo()">Guardar Ejercicio</button>
         </div>
       </div>
@@ -2026,15 +2029,20 @@
     function crearNuevoEjercicioCatalogo() {
       const name = document.getElementById('nuevoEjercicioNombre').value.trim();
       const muscle = document.getElementById('nuevoEjercicioMusculo').value;
+      const targetSets = parseInt(document.getElementById('nuevoEjercicioSeries').value) || 4;
+      
       if (!name) {
         alert('Introduce un nombre para el ejercicio');
         return;
       }
 
       const r = getCurrentRoutine();
-      r.exercises.push({ name, targetSets: 4, muscle, defaultWeight: 40, defaultReps: 10 });
+      r.exercises.push({ name, targetSets, muscle, defaultWeight: 40, defaultReps: 10 });
       persistData();
+      
       document.getElementById('nuevoEjercicioNombre').value = '';
+      document.getElementById('nuevoEjercicioSeries').value = '4';
+      
       renderPreviewRoutine();
       renderGestionEjercicios();
     }
@@ -2095,11 +2103,22 @@
       const r = getCurrentRoutine();
       const ex = r.exercises[index];
       const nuevoNombre = prompt("Modificar nombre del ejercicio:", ex.name);
-      if (nuevoNombre && nuevoNombre.trim() !== "") {
-        ex.name = nuevoNombre.trim();
-        persistData();
-        renderGestionEjercicios();
-        renderPreviewRoutine();
+      
+      if (nuevoNombre !== null && nuevoNombre.trim() !== "") {
+        const nuevasSeries = prompt(`Modificar número de series (Meta) para ${nuevoNombre.trim()}:`, ex.targetSets || 4);
+        
+        if (nuevasSeries !== null) {
+          const parsedSeries = parseInt(nuevasSeries);
+          if (!isNaN(parsedSeries) && parsedSeries > 0) {
+            ex.name = nuevoNombre.trim();
+            ex.targetSets = parsedSeries;
+            persistData();
+            renderGestionEjercicios();
+            renderPreviewRoutine();
+          } else {
+            alert("Número de series inválido. Debe ser un número mayor a 0.");
+          }
+        }
       }
     }
 
