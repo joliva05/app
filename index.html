@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <title>FitPulse - Stoic Minimal</title>
+  <link href="manifest.json" rel="manifest"/>
+  <meta content="#121316" name="theme-color"/>
+  <meta content="yes" name="apple-mobile-web-app-capable"/>
+  <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --app-bg: #121316;
+      --app-card: #181A20;
+      --app-sec: #21242C;
+      --app-border: rgba(255, 255, 255, 0.08);
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+    }
+    html.light, html:not(.dark) {
+      --app-bg: #F8FAFC;
+      --app-card: #FFFFFF;
+      --app-sec: #F1F5F9;
+      --app-border: rgba(0, 0, 0, 0.08);
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+    }
+    body {
+      background-color: var(--app-bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    input, select {
+      user-select: auto !important;
+      -webkit-user-select: auto !important;
+    }
+    
+    .slate-card {
+      background-color: var(--app-card) !important;
+      border: 1px solid var(--app-border) !important;
+      color: var(--text-main) !important;
+      position: relative;
+      z-index: 10;
+    }
+    .slate-item {
+      background-color: var(--app-sec) !important;
+      border: 1px solid var(--app-border) !important;
+      color: var(--text-main) !important;
+    }
+    .btn-primary {
+      background-color: #FFFFFF !important;
+      color: #0F172A !important;
+      border: none !important;
+    }
+    html:not(.dark) .btn-primary {
+      background-color: #0F172A !important;
+      color: #FFFFFF !important;
+    }
+    .slate-input {
+      background-color: var(--app-sec) !important;
+      border: 1px solid var(--app-border) !important;
+      color: var(--text-main) !important;
+    }
+    .slate-input:focus { outline: none; border-color: rgba(255, 255, 255, 0.35) !important; }
+    html:not(.dark) .slate-input:focus { border-color: rgba(0, 0, 0, 0.3) !important; }
+
+    /* ========================================================
+       GLASSMORPHISM REAL (CABECERA Y DOCK)
+       ======================================================== */
+    #bottomNav {
+      position: fixed !important;
+      bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+      left: 1.25rem !important; 
+      right: 1.25rem !important;
+      max-width: 28rem !important; 
+      margin: 0 auto !important;
+      z-index: 9999 !important; 
+      border-radius: 9999px !important;
+    }
+    header, #topHeader, #bottomNav {
+      -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+      backdrop-filter: blur(20px) saturate(180%) !important;
+    }
+    html:not(.dark) header,
+    html:not(.dark) #topHeader,
+    html:not(.dark) #bottomNav {
+      background-color: rgba(255, 255, 255, 0.50) !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), inset 0 1px 2px 0 rgba(255, 255, 255, 0.9) !important;
+    }
+    html.dark header,
+    html.dark #topHeader,
+    html.dark #bottomNav {
+      background-color: rgba(18, 19, 22, 0.50) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    /* SELECTOR DE DÍAS */
+    html.dark .day-btn:not(.active) { background-color: #1E222A !important; border: 1px solid rgba(255,255,255,0.08) !important; }
+    html.dark .day-btn:not(.active) * { color: #94A3B8 !important; }
+    html.dark .day-btn.active { background-color: #FFFFFF !important; border-color: #FFFFFF !important; }
+    html.dark .day-btn.active * { color: #0F172A !important; }
+    html:not(.dark) .day-btn:not(.active) { background-color: #F1F5F9 !important; border: 1px solid #E2E8F0 !important; }
+    html:not(.dark) .day-btn:not(.active) * { color: #334155 !important; }
+    html:not(.dark) .day-btn.active { background-color: #0F172A !important; border-color: #0F172A !important; }
+    html:not(.dark) .day-btn.active * { color: #FFFFFF !important; }
+
+    #quickActionModal, #modalAccionRapida, #quickActionCard { z-index: 999999 !important; }
+    #quickActionCard {
+      position: fixed !important;
+      left: 1.25rem !important; right: 1.25rem !important;
+      max-width: 24rem !important; margin: 0 auto !important;
+      bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    button, .slate-card, .meal-pill, .slate-item { 
+      transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.15s ease !important; 
+    }
+    button:active, .slate-card:active { transform: scale(0.97) !important; }
+    
+    @keyframes tabFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    main > section:not(.hidden) { animation: tabFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; }
+    @keyframes modalPop { from { opacity: 0; transform: scale(0.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    #quickActionCard, #modalMetas > div, #modalGestion > div, #modalCrearAlimento > div, #modalConfirmFinalizar > div, #modalGestionAlimentos > div, #modalConfigComidas > div { 
+      animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; 
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen select-none pb-60">
+  <!-- OVERLAY Y DRAWER LATERAL -->
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0" id="navDrawerOverlay" onclick="toggleNavDrawer(false)"></div>
+  <aside class="slate-card fixed top-0 bottom-0 left-0 h-full w-72 max-w-[80vw] z-50 p-5 shadow-2xl flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out border-y-0 border-l-0" id="navDrawerPanel">
+    <div class="space-y-6 overflow-y-auto flex-1 pr-1">
+      <div class="flex items-center justify-between pb-4 border-b border-[var(--app-border)]">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-2xl slate-item flex items-center justify-center">
+            <i class="w-5 h-5" data-lucide="zap"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold tracking-tight">FitPulse</h2>
+            <p class="text-[11px] opacity-60">Stoic Minimal</p>
+          </div>
+        </div>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="toggleNavDrawer(false)" title="Cerrar Drawer">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="space-y-1.5 text-xs font-medium">
+        <button class="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-left transition hover:bg-black/5 dark:hover:bg-white/5" onclick="toggleNavDrawer(false); openModalMetas();">
+          <i class="w-4 h-4 opacity-60" data-lucide="sliders"></i>
+          <span>Objetivos Nutricionales</span>
+        </button>
+        <button class="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-left transition hover:bg-black/5 dark:hover:bg-white/5" onclick="toggleNavDrawer(false); openModalGestion();">
+          <i class="w-4 h-4 opacity-60" data-lucide="layers"></i>
+          <span>Gestionar Rutinas / Ejercicios</span>
+        </button>
+        <button class="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-left transition hover:bg-black/5 dark:hover:bg-white/5" onclick="toggleNavDrawer(false); openModalGestionAlimentos();">
+          <i class="w-4 h-4 opacity-60" data-lucide="book-open"></i>
+          <span>Catálogo de Alimentos</span>
+        </button>
+        <button class="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-left transition hover:bg-black/5 dark:hover:bg-white/5" onclick="toggleNavDrawer(false); openModalConfigComidas();">
+          <i class="w-4 h-4 opacity-60" data-lucide="settings"></i>
+          <span>Configurar Comidas del Día</span>
+        </button>
+        <button class="w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-left transition hover:bg-black/5 dark:hover:bg-white/5" onclick="toggleTheme();">
+          <i class="w-4 h-4 text-amber-500" data-lucide="sun-medium"></i>
+          <span>Tema Claro / Oscuro</span>
+        </button>
+      </div>
+    </div>
+    <div class="pt-4 border-t border-[var(--app-border)] flex items-center justify-between text-xs opacity-60">
+      <span>FitPulse · Stoic v2.6</span>
+      <button class="hover:opacity-100 transition" onclick="toggleNavDrawer(false)">Cerrar</button>
+    </div>
+  </aside>
+
+  <!-- CABECERA -->
+  <header class="sticky top-0 z-40 px-4 py-3" id="topHeader">
+    <div class="max-w-md w-full mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <button class="w-10 h-10 rounded-full slate-item flex items-center justify-center hover:opacity-80 active:scale-95 transition" onclick="toggleNavDrawer(true)" title="Menú lateral">
+          <i class="w-5 h-5" data-lucide="menu"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl slate-item flex items-center justify-center">
+            <i class="w-4 h-4" data-lucide="zap"></i>
+          </div>
+          <h1 class="text-base font-bold tracking-tight">FitPulse</h1>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2.5">
+        <div class="flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-[11px] font-medium hidden sm:inline">Sincronizado</span>
+        </div>
+        <button class="w-9 h-9 rounded-full slate-item flex items-center justify-center hover:opacity-80 active:scale-95 transition" onclick="toggleTheme()" title="Modo Claro/Oscuro">
+          <i class="w-4 h-4" data-lucide="sun" id="themeIcon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- BARRA FLOTANTE DE DESCANSO -->
+  <div class="hidden fixed top-16 left-3 right-3 max-w-md mx-auto z-50 slate-card rounded-3xl p-4 shadow-2xl backdrop-blur-xl transition-all" id="restTimerBar">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full slate-item flex items-center justify-center">
+          <i class="w-5 h-5" data-lucide="timer"></i>
+        </div>
+        <div>
+          <p class="text-[10px] font-semibold tracking-wider uppercase opacity-60">Tiempo de Descanso</p>
+          <p class="text-2xl font-bold tracking-tight" id="timerDisplay">01:30</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-1.5">
+        <button class="px-2.5 py-1.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 active:scale-95 transition" onclick="setCustomRestTime(90)">90s</button>
+        <button class="w-9 h-9 rounded-full slate-item flex items-center justify-center active:scale-95 transition hover:opacity-80" onclick="togglePauseResumeTimer()">
+          <i class="w-4 h-4" data-lucide="pause" id="timerPauseIcon"></i>
+        </button>
+        <button class="px-3 py-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-500 dark:text-red-400 text-xs font-semibold active:scale-95 transition hover:opacity-80" onclick="stopTimer()">Saltar</button>
+      </div>
+    </div>
+    <div class="w-full slate-item h-2 rounded-full mt-3 overflow-hidden p-0">
+      <div class="btn-primary h-full rounded-full transition-all duration-1000" id="timerProgress" style="width: 100%;"></div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-md mx-auto px-4 pt-4 pb-36">
+    <!-- ==================== TAB 1: HOY ==================== -->
+    <section class="space-y-4" id="tab-hoy">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight transition-all" id="mainDashboardTitle">hoy.</h2>
+        <p class="text-sm opacity-60 font-medium mt-0.5" id="mainDashboardSubtitle">progreso diario</p>
+      </div>
+      <div class="grid grid-cols-7 gap-1.5 pt-1" id="weekSelectorContainer"></div>
+      
+      <!-- TARJETA ENERGÍA Y CALORÍAS -->
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full slate-item flex items-center justify-center">
+              <i class="w-4 h-4" data-lucide="flame"></i>
+            </div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider opacity-80">Energía y Calorías</h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs opacity-60">Meta: <strong class="font-semibold opacity-100" id="dashMetaKcalLabel">2400 kcal</strong></span>
+            <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition active:scale-95" id="editCaloriesBtn" onclick="openModalMetas()" title="Editar objetivos">
+              <i class="w-3.5 h-3.5" data-lucide="pencil"></i>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-baseline justify-between">
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl sm:text-5xl font-extrabold tracking-tight" id="dashKcalTotal">0</span>
+            <span class="text-sm opacity-60 font-medium" id="dashKcalTargetLabel">/ 2400 kcal</span>
+          </div>
+          <span class="text-xs font-semibold btn-primary px-2.5 py-0.5 rounded-full" id="dashKcalPercent">0%</span>
+        </div>
+        <div class="w-full slate-item p-0 h-2 rounded-full overflow-hidden">
+          <div class="btn-primary h-full rounded-full transition-all duration-500" id="dashKcalBar" style="width: 0%"></div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-[var(--app-border)]">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-medium text-[#F87171] flex items-center gap-1.5 text-[11px]"><span class="w-2 h-2 rounded-full bg-[#F87171]"></span> Prot</span>
+              <span class="text-[10px] opacity-60 font-semibold" id="dashProtPct">0%</span>
+            </div>
+            <div class="text-xs font-bold"><span id="dashProtVal">0g</span> <span class="text-[11px] font-normal opacity-60" id="dashProtTargetLabel">/ 160g</span></div>
+            <div class="w-full slate-item p-0 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-[#F87171] h-full rounded-full transition-all duration-500" id="dashProtBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-medium text-[#60A5FA] flex items-center gap-1.5 text-[11px]"><span class="w-2 h-2 rounded-full bg-[#60A5FA]"></span> Carbs</span>
+              <span class="text-[10px] opacity-60 font-semibold" id="dashCarbPct">0%</span>
+            </div>
+            <div class="text-xs font-bold"><span id="dashCarbVal">0g</span> <span class="text-[11px] font-normal opacity-60" id="dashCarbTargetLabel">/ 280g</span></div>
+            <div class="w-full slate-item p-0 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-[#60A5FA] h-full rounded-full transition-all duration-500" id="dashCarbBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-medium text-[#FBBF24] flex items-center gap-1.5 text-[11px]"><span class="w-2 h-2 rounded-full bg-[#FBBF24]"></span> Gras</span>
+              <span class="text-[10px] opacity-60 font-semibold" id="dashGrasPct">0%</span>
+            </div>
+            <div class="text-xs font-bold"><span id="dashGrasVal">0g</span> <span class="text-[11px] font-normal opacity-60" id="dashGrasTargetLabel">/ 65g</span></div>
+            <div class="w-full slate-item p-0 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-[#FBBF24] h-full rounded-full transition-all duration-500" id="dashGrasBar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- TARJETA SERIES DE HOY -->
+      <div class="slate-card rounded-3xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full slate-item flex items-center justify-center">
+              <i class="w-4 h-4" data-lucide="dumbbell"></i>
+            </div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider opacity-80" id="todaySetsSectionTitle">Series de Hoy</h3>
+          </div>
+          <span class="text-xs font-medium px-3 py-1 rounded-full slate-item" id="dashSetsCount">0 completadas</span>
+        </div>
+        <div class="space-y-2 max-h-52 overflow-y-auto pr-1" id="dashSetsList">
+          <div class="text-center py-6 text-xs opacity-60" id="dashSetsEmpty">
+            <i class="w-6 h-6 mx-auto mb-1 opacity-40" data-lucide="calendar-x"></i>
+            Aún no has registrado series en este día.<br>Ve a la pestaña <strong>Entreno</strong> para comenzar.
+          </div>
+        </div>
+        <button class="mt-4 w-full py-3 rounded-full slate-item text-xs font-semibold flex items-center justify-center gap-2 transition active:scale-95 hover:opacity-80" onclick="switchTab('entreno')">
+          <span>Abrir Sesión de Entreno</span>
+          <i class="w-4 h-4" data-lucide="arrow-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: ENTRENO ==================== -->
+    <section class="space-y-4 hidden" id="tab-entreno">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[11px] uppercase tracking-wider font-semibold opacity-60">Entrenamiento</span>
+          <h2 class="text-xl font-bold tracking-tight">Sesión y Rutinas</h2>
+        </div>
+        <button class="px-3.5 py-1.5 rounded-full slate-item text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition hover:opacity-80" onclick="openModalGestion()">
+          <i class="w-3.5 h-3.5 opacity-60" data-lucide="settings-2"></i>
+          <span>+ Catálogo</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-3 gap-2" id="routineCardsContainer"></div>
+      <!-- PREVIA DE RUTINA -->
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4" id="panelWorkoutPreview">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] uppercase px-2.5 py-0.5 rounded-full slate-item font-semibold" id="previewRoutineBadge">Rutina Activa</span>
+            <h3 class="text-lg font-bold mt-1" id="previewRoutineTitle">Empuje</h3>
+          </div>
+          <button class="text-xs px-2.5 py-1 rounded-full slate-item hover:opacity-80 flex items-center gap-1 font-medium transition" onclick="openModalGestion()" title="Editar rutina">
+            <i class="w-3.5 h-3.5" data-lucide="pencil"></i> Editar
+          </button>
+        </div>
+        <p class="text-xs opacity-60" id="previewRoutineDesc">Pecho, Hombro y Tríceps</p>
+        <div class="space-y-2 pt-2 border-t border-[var(--app-border)]" id="previewExercisesList"></div>
+        <button class="w-full py-3.5 rounded-full btn-primary font-semibold text-xs tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-95 transition hover:opacity-90" id="btnStartOrResumeWorkout" onclick="iniciarOContinuarSesionActiva()">
+          <i class="w-4 h-4 fill-current" data-lucide="play"></i>
+          <span id="btnStartOrResumeWorkoutText">Empezar Entrenamiento</span>
+        </button>
+      </div>
+
+      <!-- PANEL GUIADO DE ENTRENAMIENTO ACTIVO -->
+      <div class="slate-card rounded-3xl p-5 shadow-lg space-y-4 hidden !border-emerald-500/50" id="panelActiveWorkoutSession">
+        <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+            <span class="text-xs font-bold tracking-wide uppercase text-emerald-500">Sesión en Curso</span>
+          </div>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full slate-item" id="activeWorkoutRoutineName">Empuje</span>
+        </div>
+        <div class="mt-2 mb-4">
+          <div class="flex justify-between text-[10px] font-bold opacity-60 uppercase tracking-wider mb-1.5">
+            <span>Progreso de Rutina</span>
+            <span class="text-emerald-500 font-extrabold opacity-100" id="activeWorkoutProgressText">0%</span>
+          </div>
+          <div class="w-full slate-item p-0 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" id="activeWorkoutProgressBar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-bold opacity-60 tracking-wider" id="activeMuscleLabel">Músculo</span>
+              <h3 class="text-xl font-bold tracking-tight" id="activeExBadge">Press Banca</h3>
+            </div>
+            <span class="text-xs font-semibold px-3 py-1 rounded-full btn-primary" id="activeSetBadge">Serie 1 de 4</span>
+          </div>
+          <div class="flex items-center justify-between p-2.5 px-3 rounded-2xl slate-item text-xs mb-3" id="activeExLastRecordCard">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center opacity-60">
+                <i class="w-3.5 h-3.5" data-lucide="history"></i>
+              </div>
+              <span class="text-[11px] font-semibold opacity-60">Última sesión</span>
+            </div>
+            <span class="text-xs font-bold tracking-tight" id="activeExLastRecordText">--</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold opacity-60">Peso (kg)</label>
+              <div class="relative">
+                <input class="w-full slate-input rounded-2xl px-3 py-2.5 text-base font-bold text-center" id="activeInputWeight" step="0.5" type="number" value="60">
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold opacity-60">Repeticiones</label>
+              <div class="relative">
+                <input class="w-full slate-input rounded-2xl px-3 py-2.5 text-base font-bold text-center" id="activeInputReps" step="1" type="number" value="10">
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 pt-2">
+            <button class="flex-1 py-3 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition" onclick="completarSerieActiva()">
+              <i class="w-4 h-4" data-lucide="check"></i>
+              <span>Completar Serie</span>
+            </button>
+            <button class="px-3.5 py-3 rounded-full slate-item text-xs font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="startRestTimer(90)" title="Iniciar temporizador de descanso">
+              <i class="w-4 h-4" data-lucide="timer"></i>
+              <span>90s</span>
+            </button>
+          </div>
+          <div class="pt-2">
+            <label class="text-[10px] font-semibold uppercase opacity-60 mb-1.5 block">Series de este ejercicio</label>
+            <div class="space-y-1.5" id="activeExerciseSetsHistory"></div>
+          </div>
+          <div class="flex gap-2 pt-3 border-t border-[var(--app-border)]" id="navExerciseButtonsContainer">
+            <button class="flex-1 py-2.5 rounded-full slate-item text-xs font-semibold flex items-center justify-center gap-1 hover:opacity-80 active:scale-95 transition" id="btnNavExAnterior" onclick="ejercicioAnterior()">
+              <i class="w-3.5 h-3.5" data-lucide="chevron-left"></i>
+              <span>Anterior</span>
+            </button>
+            <button class="flex-1 py-2.5 rounded-full slate-item text-xs font-semibold flex items-center justify-center gap-1 hover:opacity-80 active:scale-95 transition" id="btnNavExSiguiente" onclick="siguienteEjercicio()">
+              <span>Siguiente</span>
+              <i class="w-3.5 h-3.5" data-lucide="chevron-right"></i>
+            </button>
+          </div>
+          <button class="w-full py-2.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-500/20 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95" onclick="finalizarEntrenamiento()">
+            <i class="w-4 h-4" data-lucide="square"></i>
+            <span>Finalizar Entrenamiento</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: COMIDAS ==================== -->
+    <section class="space-y-4 hidden" id="tab-comidas">
+      <div class="slate-card rounded-3xl p-4 shadow-sm space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold uppercase tracking-wider opacity-60">Comida del Día</label>
+          <button class="text-[11px] opacity-60 hover:opacity-100 flex items-center gap-1 underline transition" onclick="openModalConfigComidas()">
+            <i class="w-3 h-3" data-lucide="settings"></i> Configurar Comidas
+          </button>
+        </div>
+        <div class="grid grid-cols-4 gap-1 p-1 slate-item border-none rounded-full" id="mealTypeButtonsContainer">
+          <!-- Generado dinámicamente para soportar nombres personalizados -->
+        </div>
+      </div>
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-semibold uppercase tracking-wider opacity-60">Añadir Alimento</h3>
+          <button class="px-3 py-1.5 rounded-full slate-item text-xs font-semibold flex items-center gap-1 hover:opacity-80 active:scale-95 transition" onclick="openModalCrearAlimento()">
+            <i class="w-3.5 h-3.5" data-lucide="plus"></i>
+            <span>Crear Alimento</span>
+          </button>
+        </div>
+        <div class="relative">
+          <input autocomplete="off" class="w-full slate-input rounded-2xl px-4 py-3 text-xs font-medium focus:outline-none" id="foodSearchInput" oninput="onFoodSearchInput(this.value)" placeholder="Buscar alimento (ej. Avena, Pechuga, Huevo...)" type="text">
+          <div class="hidden absolute left-0 right-0 top-full mt-1 slate-card rounded-2xl shadow-2xl max-h-48 overflow-y-auto z-30" id="foodSuggestions"></div>
+        </div>
+        <div class="grid grid-cols-12 gap-2 items-center">
+          <div class="col-span-4 flex rounded-full overflow-hidden slate-item p-0.5">
+            <button class="flex-1 py-2 text-xs font-bold rounded-full btn-primary transition" id="btnUnitGrams" onclick="setPortionUnit('g')">g</button>
+            <button class="flex-1 py-2 text-xs font-semibold rounded-full opacity-60 hover:opacity-100 transition" id="btnUnitPcs" onclick="setPortionUnit('ud')">ud</button>
+          </div>
+          <div class="col-span-8">
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs text-center font-semibold" id="foodAmountInput" oninput="calculatePreviewMacros()" type="number" value="100">
+          </div>
+        </div>
+        <div class="p-3.5 rounded-2xl slate-item flex items-center justify-between text-xs">
+          <div class="text-center"><span class="block text-[10px] opacity-60 font-medium">KCAL</span><span class="font-bold macro-kcal" id="previewFoodKcal">0</span></div>
+          <div class="text-center"><span class="block text-[10px] opacity-60">PROT</span><span class="font-bold macro-prot text-rose-500" id="previewFoodProt">0g</span></div>
+          <div class="text-center"><span class="block text-[10px] opacity-60">CARB</span><span class="font-bold macro-carbs text-sky-500" id="previewFoodCarb">0g</span></div>
+          <div class="text-center"><span class="block text-[10px] opacity-60">GRAS</span><span class="font-bold macro-fats text-amber-500" id="previewFoodGras">0g</span></div>
+        </div>
+        <button id="btnGuardarComida" class="w-full py-3.5 rounded-full btn-primary font-bold text-xs tracking-wider flex items-center justify-center gap-2 shadow-md active:scale-95 transition hover:opacity-90" onclick="registrarComida()">
+          <i class="w-4 h-4" data-lucide="plus-circle"></i>
+          <span>Guardar en Diario</span>
+        </button>
+      </div>
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-semibold uppercase tracking-wider opacity-80" id="todayMealsSectionTitle">Alimentos Registrados Hoy</h3>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full slate-item" id="totalMealsCount">0 items</span>
+        </div>
+        <div class="space-y-2 max-h-64 overflow-y-auto pr-1" id="todayMealsList">
+          <div class="text-center py-6 text-xs opacity-60" id="todayMealsEmpty">
+            No hay alimentos registrados en este día.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: HISTORIAL ==================== -->
+    <section class="space-y-4 hidden" id="tab-historial">
+      <div>
+        <span class="text-[11px] uppercase tracking-wider font-semibold opacity-60">Registro Histórico</span>
+        <h2 class="text-xl font-bold tracking-tight">Historial y Resumen</h2>
+      </div>
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-[var(--app-border)]">
+          <span class="text-xs font-semibold uppercase tracking-wider opacity-60">Balance del Día</span>
+          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full slate-item" id="historialStatus">En Objetivo</span>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="slate-item border-none p-2.5 rounded-2xl">
+            <span class="text-[10px] opacity-60 block font-medium">Kcal</span>
+            <span class="font-bold text-sm macro-kcal" id="histKcalVal">0</span>
+            <span class="text-[10px] opacity-60 block" id="histKcalTarget">/ 2400</span>
+          </div>
+          <div class="slate-item border-none p-2.5 rounded-2xl">
+            <span class="text-[10px] opacity-60 block font-medium">Prot</span>
+            <span class="font-bold text-sm macro-prot text-rose-500" id="histProtVal">0g</span>
+            <span class="text-[10px] opacity-60 block" id="histProtTarget">/ 160g</span>
+          </div>
+          <div class="slate-item border-none p-2.5 rounded-2xl">
+            <span class="text-[10px] opacity-60 block font-medium">Carb</span>
+            <span class="font-bold text-sm macro-carbs text-sky-500" id="histCarbVal">0g</span>
+            <span class="text-[10px] opacity-60 block" id="histCarbTarget">/ 280g</span>
+          </div>
+          <div class="slate-item border-none p-2.5 rounded-2xl">
+            <span class="text-[10px] opacity-60 block font-medium">Gras</span>
+            <span class="font-bold text-sm macro-fats text-amber-500" id="histGrasVal">0g</span>
+            <span class="text-[10px] opacity-60 block" id="histGrasTarget">/ 65g</span>
+          </div>
+        </div>
+      </div>
+      <div class="slate-card rounded-3xl p-5 shadow-sm space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-[var(--app-border)]">
+          <span class="text-xs font-semibold uppercase tracking-wider opacity-60">Volumen de Entrenamiento</span>
+          <span class="text-xs font-semibold opacity-80" id="historialSetsCount">0 series totales</span>
+        </div>
+        <div class="space-y-2" id="historialSetsSummary">
+          <p class="text-xs opacity-60 text-center py-4">No hay entrenamientos completados registrados en esta sesión.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- DOCK DE NAVEGACIÓN -->
+  <nav class="px-4 py-2 flex items-center justify-between" id="bottomNav">
+    <div class="pointer-events-auto w-full grid grid-cols-5 text-center items-center" id="navBottomDock">
+      <button class="nav-tab flex flex-col items-center justify-center active:scale-95 transition" id="tabBtnHoy" onclick="switchTab('hoy')">
+        <div class="w-11 h-7 rounded-full flex items-center justify-center transition-all btn-primary" id="pillHoy">
+          <i class="w-4 h-4" data-lucide="layout-grid"></i>
+        </div>
+        <span class="text-[10px] mt-0.5 font-bold" id="labelHoy">Hoy</span>
+      </button>
+      <button class="nav-tab flex flex-col items-center justify-center active:scale-95 transition" id="tabBtnEntreno" onclick="switchTab('entreno')">
+        <div class="w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100" id="pillEntreno">
+          <i class="w-4 h-4" data-lucide="dumbbell"></i>
+        </div>
+        <span class="text-[10px] mt-0.5 opacity-60" id="labelEntreno">Entreno</span>
+      </button>
+      <div class="flex flex-col items-center justify-center">
+        <button class="w-12 h-12 rounded-full btn-primary shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform" id="btnMainDockAction" onclick="openQuickActionSheet()" title="Acción rápida">
+          <i class="w-6 h-6 stroke-[2.5]" data-lucide="plus"></i>
+        </button>
+      </div>
+      <button class="nav-tab flex flex-col items-center justify-center active:scale-95 transition" id="tabBtnComidas" onclick="switchTab('comidas')">
+        <div class="w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100" id="pillComidas">
+          <i class="w-4 h-4" data-lucide="utensils"></i>
+        </div>
+        <span class="text-[10px] mt-0.5 opacity-60" id="labelComidas">Comidas</span>
+      </button>
+      <button class="nav-tab flex flex-col items-center justify-center active:scale-95 transition" id="tabBtnHistorial" onclick="switchTab('historial')">
+        <div class="w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100" id="pillHistorial">
+          <i class="w-4 h-4" data-lucide="history"></i>
+        </div>
+        <span class="text-[10px] mt-0.5 opacity-60" id="labelHistorial">Historial</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL ACCIÓN RÁPIDA -->
+  <div class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[999999]" id="modalAccionRapida" onclick="if(event.target===this)closeQuickActionSheet()">
+    <div class="slate-card rounded-3xl p-5 shadow-2xl space-y-3 z-[999999]" id="quickActionCard">
+      <div class="flex items-center justify-between pb-2 border-b border-[var(--app-border)]">
+        <h3 class="text-sm font-bold">Acción Rápida</h3>
+        <button class="p-1.5 rounded-full slate-item hover:opacity-80 transition" onclick="closeQuickActionSheet()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="space-y-2.5 pt-1">
+        <button class="quick-action-item w-full p-3 rounded-2xl slate-item hover:opacity-80 flex items-center gap-3 text-left transition" onclick="closeQuickActionSheet(); switchTab('comidas');">
+          <div class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+            <i class="w-5 h-5 opacity-80" data-lucide="utensils"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold">Registrar Comida</p>
+            <p class="subtext text-[11px] opacity-60">Añade tomas a tu diario de hoy</p>
+          </div>
+        </button>
+        <button class="quick-action-item w-full p-3 rounded-2xl slate-item hover:opacity-80 flex items-center gap-3 text-left transition" onclick="closeQuickActionSheet(); switchTab('entreno'); iniciarOContinuarSesionActiva();">
+          <div class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+            <i class="w-5 h-5 opacity-80" data-lucide="dumbbell"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold">Iniciar Entrenamiento</p>
+            <p class="subtext text-[11px] opacity-60">Comienza tu rutina diaria guiada</p>
+          </div>
+        </button>
+        <button class="quick-action-item w-full p-3 rounded-2xl slate-item hover:opacity-80 flex items-center gap-3 text-left transition" onclick="closeQuickActionSheet(); switchTab('entreno'); openModalGestion();">
+          <div class="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+            <i class="w-5 h-5 opacity-80" data-lucide="plus-circle"></i>
+          </div>
+          <div>
+            <p class="text-xs font-semibold">Añadir Serie Rápida / Rutina</p>
+            <p class="subtext text-[11px] opacity-60">Configura ejercicios o series</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL METAS -->
+  <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalMetas">
+    <div class="slate-card w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+        <h3 class="text-base font-semibold">Objetivos Nutricionales</h3>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalMetas()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Calorías (kcal)</label>
+          <input class="w-full slate-input rounded-2xl px-4 py-2.5 text-sm font-semibold" id="goalKcalInput" type="number" value="2400"/>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[10px] font-semibold text-rose-500 mb-1">Prot (g)</label>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalProteinInput" type="number" value="160"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-sky-500 mb-1">Carb (g)</label>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalCarbsInput" type="number" value="280"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-amber-500 mb-1">Gras (g)</label>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-sm font-semibold text-center" id="goalFatInput" type="number" value="65"/>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button class="py-3 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalMetas()">Cancelar</button>
+        <button class="py-3 rounded-full btn-primary text-xs font-bold uppercase tracking-wider transition hover:opacity-90" onclick="saveGoals()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GESTIÓN: RUTINAS Y CATÁLOGO -->
+  <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalGestion">
+    <div class="slate-card w-full max-w-md rounded-3xl p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+        <div>
+          <h3 class="text-base font-bold">Gestión de Entrenamiento</h3>
+          <p class="text-xs opacity-60">Rutinas y catálogo de ejercicios</p>
+        </div>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalGestion()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      
+      <!-- Pestañas del Modal -->
+      <div class="grid grid-cols-2 gap-1 p-1 slate-item rounded-full text-xs font-semibold border-none">
+        <button class="py-2 rounded-full btn-primary shadow-sm transition" id="tabBtnGestionRutinas" onclick="switchGestionTab('rutinas')">Rutinas</button>
+        <button class="py-2 rounded-full opacity-60 hover:opacity-100 transition" id="tabBtnGestionEjercicios" onclick="switchGestionTab('ejercicios')">Ejercicios de Rutina</button>
+      </div>
+
+      <!-- Sección Rutinas -->
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1" id="sectionGestionRutinas">
+        <div class="space-y-2" id="listaRutinasGestion"></div>
+        <div class="pt-3 border-t border-[var(--app-border)] space-y-2.5">
+          <h4 class="text-xs font-bold uppercase tracking-wider opacity-60">Crear Nueva Rutina</h4>
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevaRutinaNombre" placeholder="Nombre (ej. Tirón Pesado)"/>
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevaRutinaDesc" placeholder="Músculos (ej. Espalda, Trapecio)"/>
+          <button class="w-full py-2.5 rounded-full btn-primary font-bold text-xs uppercase hover:opacity-90 transition" onclick="crearNuevaRutina()">Añadir Rutina</button>
+        </div>
+      </div>
+
+      <!-- Sección Ejercicios -->
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1 hidden" id="sectionGestionEjercicios">
+        <div class="space-y-2 max-h-52 overflow-y-auto" id="listaEjerciciosCatalogo"></div>
+        <div class="pt-3 border-t border-[var(--app-border)] space-y-2.5">
+          <h4 class="text-xs font-bold uppercase tracking-wider opacity-60">Añadir Ejercicio</h4>
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevoEjercicioNombre" placeholder="Nombre (ej. Elevaciones Laterales)"/>
+          <select class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevoEjercicioMusculo">
+            <option value="Pecho">Pecho</option>
+            <option value="Espalda">Espalda</option>
+            <option value="Pierna">Pierna</option>
+            <option value="Hombro">Hombro</option>
+            <option value="Bíceps">Bíceps</option>
+            <option value="Tríceps">Tríceps</option>
+            <option value="Core">Core</option>
+          </select>
+          <button class="w-full py-2.5 rounded-full btn-primary font-bold text-xs uppercase hover:opacity-90 transition" onclick="crearNuevoEjercicioCatalogo()">Guardar Ejercicio</button>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-[var(--app-border)] text-right">
+        <button class="px-5 py-2.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalGestion()">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GESTIÓN: ALIMENTOS -->
+  <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalGestionAlimentos">
+    <div class="slate-card w-full max-w-md rounded-3xl p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+        <div>
+          <h3 class="text-base font-bold">Catálogo de Alimentos</h3>
+          <p class="text-xs opacity-60">Edita o elimina tus alimentos base</p>
+        </div>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalGestionAlimentos()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="listaAlimentosGestion"></div>
+      <div class="pt-2 border-t border-[var(--app-border)] text-right">
+        <button class="px-5 py-2.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalGestionAlimentos()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURAR COMIDAS -->
+  <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalConfigComidas">
+    <div class="slate-card w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+        <div>
+          <h3 class="text-base font-bold">Configurar Comidas</h3>
+          <p class="text-xs opacity-60">Modifica los nombres de tus comidas</p>
+        </div>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalConfigComidas()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="space-y-2.5" id="listaConfigComidas">
+        <!-- Generado por JS -->
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2 border-t border-[var(--app-border)]">
+        <button class="py-2.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalConfigComidas()">Cancelar</button>
+        <button class="py-2.5 rounded-full btn-primary text-xs font-bold uppercase tracking-wider transition hover:opacity-90" onclick="guardarConfigComidas()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR ALIMENTO -->
+  <div class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalCrearAlimento">
+    <div class="slate-card w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-[var(--app-border)]">
+        <div>
+          <h3 class="text-base font-bold">Crear Alimento Nuevo</h3>
+          <p class="text-xs opacity-60">Añade tus macros base al catálogo</p>
+        </div>
+        <button class="w-8 h-8 rounded-full slate-item flex items-center justify-center hover:opacity-80 transition" onclick="closeModalCrearAlimento()">
+          <i class="w-4 h-4" data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-semibold uppercase tracking-wider opacity-60 mb-1">Nombre</label>
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="customFoodName" placeholder="Ej. Yogur Griego Natural"/>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-semibold opacity-80 mb-1">Porción Base</label>
+            <select class="w-full slate-input rounded-2xl px-2 py-2 text-xs" id="customFoodUnit">
+              <option value="g">Por cada 100g</option>
+              <option value="ud">Por cada 1 unidad</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold opacity-80 mb-1">Kcal</label>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-bold text-center" id="customFoodKcal" placeholder="0" type="number"/>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-[10px] font-semibold text-rose-500 mb-1">Prot (g)</label>
+            <input class="w-full slate-input rounded-2xl px-2 py-2 text-xs text-center font-bold" id="customFoodProt" placeholder="0" step="0.1" type="number"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-sky-500 mb-1">Carb (g)</label>
+            <input class="w-full slate-input rounded-2xl px-2 py-2 text-xs text-center font-bold" id="customFoodCarb" placeholder="0" step="0.1" type="number"/>
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold text-amber-500 mb-1">Gras (g)</label>
+            <input class="w-full slate-input rounded-2xl px-2 py-2 text-xs text-center font-bold" id="customFoodGras" placeholder="0" step="0.1" type="number"/>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-2">
+        <button class="py-3 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="closeModalCrearAlimento()">Cancelar</button>
+        <button class="py-3 rounded-full btn-primary text-xs font-bold uppercase tracking-wider transition hover:opacity-90" onclick="guardarNuevoAlimento()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAR FINALIZAR -->
+  <div class="hidden fixed inset-0 z-[9999999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" id="modalConfirmFinalizar">
+    <div class="slate-card w-full max-w-xs rounded-3xl p-5 shadow-2xl space-y-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto">
+        <i class="w-6 h-6" data-lucide="alert-triangle"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold">¿Finalizar entrenamiento?</h3>
+        <p class="text-xs opacity-60 mt-1">Se guardará el progreso de las series completadas.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button class="py-2.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" onclick="cerrarConfirmFinalizar()">
+          Volver
+        </button>
+        <button class="py-2.5 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition shadow-md" onclick="ejecutarFinEntrenamiento()">
+          Finalizar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LÓGICA JAVASCRIPT ==================== -->
+  <script>
+    let autoReturnTimer = null;
+
+    function getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    const DEFAULT_ROUTINES = [
+      { 
+        id: 'r_empuje', 
+        name: 'Empuje', 
+        desc: 'Pecho, Hombro y Tríceps', 
+        exercises: [
+          { name: 'Press Banca', targetSets: 4, muscle: 'Pecho', defaultWeight: 70, defaultReps: 8 },
+          { name: 'Press Militar con Mancuernas', targetSets: 4, muscle: 'Hombro', defaultWeight: 22, defaultReps: 10 },
+          { name: 'Fondos en Paralelas', targetSets: 3, muscle: 'Tríceps', defaultWeight: 0, defaultReps: 12 }
+        ] 
+      },
+      { 
+        id: 'r_tiron', 
+        name: 'Tirón', 
+        desc: 'Espalda y Bíceps', 
+        exercises: [
+          { name: 'Dominadas', targetSets: 4, muscle: 'Espalda', defaultWeight: 0, defaultReps: 8 },
+          { name: 'Remo con Barra', targetSets: 4, muscle: 'Espalda', defaultWeight: 65, defaultReps: 10 },
+          { name: 'Curl Bíceps Barra Z', targetSets: 3, muscle: 'Bíceps', defaultWeight: 30, defaultReps: 10 }
+        ] 
+      },
+      { 
+        id: 'r_pierna', 
+        name: 'Pierna', 
+        desc: 'Cuádriceps, Isquios y Core', 
+        exercises: [
+          { name: 'Sentadilla Trasera', targetSets: 4, muscle: 'Pierna', defaultWeight: 90, defaultReps: 8 },
+          { name: 'Prensa Inclinada', targetSets: 4, muscle: 'Pierna', defaultWeight: 160, defaultReps: 12 },
+          { name: 'Elevación Gemelos', targetSets: 4, muscle: 'Pierna', defaultWeight: 50, defaultReps: 15 }
+        ] 
+      }
+    ];
+
+    const DEFAULT_FOODS = [
+      { name: 'Pechuga de Pollo', unit: 'g', baseQty: 100, kcal: 165, prot: 31, carb: 0, gras: 3.6 },
+      { name: 'Avena en Copos', unit: 'g', baseQty: 100, kcal: 389, prot: 16.9, carb: 66.3, gras: 6.9 },
+      { name: 'Huevo Entero', unit: 'ud', baseQty: 1, kcal: 78, prot: 6.3, carb: 0.6, gras: 5.3 },
+      { name: 'Arroz Blanco Cocido', unit: 'g', baseQty: 100, kcal: 130, prot: 2.7, carb: 28.2, gras: 0.3 },
+      { name: 'Plátano', unit: 'ud', baseQty: 1, kcal: 105, prot: 1.3, carb: 27, gras: 0.3 },
+      { name: 'Aceite de Oliva (cucharada)', unit: 'ud', baseQty: 1, kcal: 119, prot: 0, carb: 0, gras: 13.5 },
+      { name: 'Proteína Whey (Scoop 30g)', unit: 'ud', baseQty: 1, kcal: 120, prot: 24, carb: 2, gras: 1.5 }
+    ];
+
+    const APP_STATE = {
+      theme: 'dark',
+      activeTab: 'hoy',
+      selectedDate: null,
+      mealTypes: ['Desayuno', 'Comida', 'Merienda', 'Cena'],
+      currentMealType: 'Desayuno',
+      portionUnit: 'g',
+      selectedFood: null,
+      goals: { kcal: 2400, protein: 160, carbs: 280, fat: 65 },
+      alimentos_base: DEFAULT_FOODS,
+      comidas_diarias: [],
+      routines: DEFAULT_ROUTINES,
+      selectedRoutineId: 'r_empuje',
+      series_entreno: [],
+      activeSession: {
+        isRunning: false,
+        routineId: null,
+        exerciseIndex: 0,
+        currentSetNum: 1,
+        setsCompletedInSession: []
+      },
+      timer: {
+        intervalId: null,
+        remainingSeconds: 90,
+        totalSeconds: 90,
+        isPaused: false
+      }
+    };
+
+    /* INITIALIZATION */
+    document.addEventListener('DOMContentLoaded', () => {
+      initStorage();
+      initTheme();
+      APP_STATE.selectedDate = getTodayStr();
+      renderWeekSelector();
+      renderMealTypeButtons();
+      renderRoutineCards();
+      renderPreviewRoutine();
+      updateNutritionDashboard();
+      renderTodayMeals();
+      renderSetsDashboard();
+
+      if (APP_STATE.alimentos_base.length > 0) {
+        selectFoodItem(APP_STATE.alimentos_base[0]);
+      }
+      if (window.lucide) lucide.createIcons();
+    });
+
+    function initStorage() {
+      try {
+        const savedMeals = localStorage.getItem('fitpulse_today_meals');
+        APP_STATE.comidas_diarias = savedMeals ? JSON.parse(savedMeals) : [];
+
+        const savedSets = localStorage.getItem('fitpulse_today_sets');
+        APP_STATE.series_entreno = savedSets ? JSON.parse(savedSets) : [];
+
+        const savedGoals = localStorage.getItem('fitpulse_goals');
+        if (savedGoals) APP_STATE.goals = JSON.parse(savedGoals);
+
+        const savedRoutines = localStorage.getItem('fitpulse_routines');
+        if (savedRoutines) APP_STATE.routines = JSON.parse(savedRoutines);
+
+        const savedFoods = localStorage.getItem('fitpulse_custom_foods');
+        if (savedFoods) APP_STATE.alimentos_base = JSON.parse(savedFoods);
+
+        const savedMealTypes = localStorage.getItem('fitpulse_meal_types');
+        if (savedMealTypes) APP_STATE.mealTypes = JSON.parse(savedMealTypes);
+      } catch(e) {
+        APP_STATE.comidas_diarias = [];
+        APP_STATE.series_entreno = [];
+      }
+      if(!APP_STATE.mealTypes.includes(APP_STATE.currentMealType)) {
+        APP_STATE.currentMealType = APP_STATE.mealTypes[0] || 'Desayuno';
+      }
+    }
+
+    function persistData() {
+      try {
+        localStorage.setItem('fitpulse_today_meals', JSON.stringify(APP_STATE.comidas_diarias));
+        localStorage.setItem('fitpulse_today_sets', JSON.stringify(APP_STATE.series_entreno));
+        localStorage.setItem('fitpulse_goals', JSON.stringify(APP_STATE.goals));
+        localStorage.setItem('fitpulse_routines', JSON.stringify(APP_STATE.routines));
+        localStorage.setItem('fitpulse_custom_foods', JSON.stringify(APP_STATE.alimentos_base));
+        localStorage.setItem('fitpulse_meal_types', JSON.stringify(APP_STATE.mealTypes));
+      } catch(e) {}
+    }
+
+    /* THEME */
+    function initTheme() {
+      const saved = localStorage.getItem('fitpulse_theme');
+      if (saved) {
+        applyTheme(saved);
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(prefersDark ? 'dark' : 'light');
+      }
+    }
+
+    function applyTheme(theme) {
+      APP_STATE.theme = theme;
+      const html = document.documentElement;
+      const icon = document.getElementById('themeIcon');
+      if (theme === 'light') {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        if (icon) icon.setAttribute('data-lucide', 'moon');
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        if (icon) icon.setAttribute('data-lucide', 'sun');
+      }
+      localStorage.setItem('fitpulse_theme', theme);
+      updateDockThemeStyles();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleTheme() {
+      applyTheme(APP_STATE.theme === 'dark' ? 'light' : 'dark');
+    }
+
+    /* DRAWER */
+    function toggleNavDrawer(isOpen) {
+      const overlay = document.getElementById('navDrawerOverlay');
+      const panel = document.getElementById('navDrawerPanel');
+      if (!overlay || !panel) return;
+
+      if (isOpen) {
+        overlay.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          overlay.classList.remove('opacity-0');
+          overlay.classList.add('opacity-100');
+          panel.classList.remove('-translate-x-full');
+          panel.classList.add('translate-x-0');
+        });
+      } else {
+        overlay.classList.remove('opacity-100');
+        overlay.classList.add('opacity-0');
+        panel.classList.remove('translate-x-0');
+        panel.classList.add('-translate-x-full');
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+        }, 300);
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /* TABS */
+    function switchTab(tab) {
+      if (APP_STATE.selectedDate && APP_STATE.selectedDate !== getTodayStr()) {
+        selectDate(getTodayStr());
+      }
+      APP_STATE.activeTab = tab;
+      ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        if (t === tab) sec?.classList.remove('hidden');
+        else sec?.classList.add('hidden');
+      });
+      updateDockThemeStyles();
+      if (tab === 'historial') updateHistorialSummary();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateDockThemeStyles() {
+      const isDark = APP_STATE.theme === 'dark';
+      const tab = APP_STATE.activeTab;
+      ['hoy', 'entreno', 'comidas', 'historial'].forEach(t => {
+        const capitalized = t.charAt(0).toUpperCase() + t.slice(1);
+        const pill = document.getElementById(`pill${capitalized}`);
+        const label = document.getElementById(`label${capitalized}`);
+        if (!pill || !label) return;
+
+        if (t === tab) {
+          pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all btn-primary";
+          label.className = "text-[10px] mt-0.5 font-bold";
+        } else {
+          pill.className = "w-11 h-7 rounded-full flex items-center justify-center transition-all opacity-40 hover:opacity-100";
+          label.className = "text-[10px] mt-0.5 opacity-60";
+        }
+      });
+    }
+
+    function openQuickActionSheet() {
+      const modal = document.getElementById('modalAccionRapida');
+      if (modal) modal.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+    function closeQuickActionSheet() {
+      const modal = document.getElementById('modalAccionRapida');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    /* WEEK SELECTOR */
+    function renderWeekSelector() {
+      const container = document.getElementById('weekSelectorContainer');
+      if (!container) return;
+      const curr = new Date();
+      const dayOfWeek = curr.getDay() || 7; 
+      const monday = new Date(curr);
+      monday.setDate(curr.getDate() - dayOfWeek + 1);
+      const daysMap = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+      let html = '';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const dayNum = String(d.getDate()).padStart(2, '0');
+        const isSelected = dateStr === APP_STATE.selectedDate;
+        if (isSelected) {
+          html += `<button onclick="selectDate('${dateStr}')" class="day-btn active flex flex-col items-center py-2 px-1 rounded-2xl font-semibold text-center shadow-lg active:scale-95 transition">
+            <span class="text-[10px] uppercase font-bold opacity-80">${daysMap[i]}</span>
+            <span class="text-xs font-extrabold mt-0.5">${dayNum}</span>
+          </button>`;
+        } else {
+          html += `<button onclick="selectDate('${dateStr}')" class="day-btn flex flex-col items-center py-2 px-1 rounded-2xl slate-item text-center active:scale-95 transition">
+            <span class="text-[10px] uppercase font-semibold opacity-60">${daysMap[i]}</span>
+            <span class="text-xs font-semibold mt-0.5">${dayNum}</span>
+          </button>`;
+        }
+      }
+      container.innerHTML = html;
+    }
+
+    function selectDate(dateStr) {
+      APP_STATE.selectedDate = dateStr;
+      renderWeekSelector();
+      updateNutritionDashboard();
+      renderTodayMeals();
+      renderSetsDashboard();
+      
+      const titleEl = document.getElementById('mainDashboardTitle');
+      const subTitleEl = document.getElementById('mainDashboardSubtitle');
+      const todayStr = getTodayStr();
+      
+      if (titleEl) {
+        if (dateStr === todayStr) {
+          titleEl.innerText = 'hoy.';
+          subTitleEl.innerText = 'progreso diario';
+          const mTitle = document.getElementById('todayMealsSectionTitle');
+          const sTitle = document.getElementById('todaySetsSectionTitle');
+          if (mTitle) mTitle.innerText = 'Alimentos Registrados Hoy';
+          if (sTitle) sTitle.innerText = 'Series de Hoy';
+        } else {
+          const parts = dateStr.split('-');
+          titleEl.innerText = `${parts[2]}/${parts[1]}.`;
+          subTitleEl.innerText = 'registro histórico';
+          const mTitle = document.getElementById('todayMealsSectionTitle');
+          const sTitle = document.getElementById('todaySetsSectionTitle');
+          if (mTitle) mTitle.innerText = 'Alimentos Registrados';
+          if (sTitle) sTitle.innerText = 'Series Registradas';
+        }
+      }
+
+      if (autoReturnTimer) clearTimeout(autoReturnTimer);
+      if (dateStr !== todayStr) {
+        autoReturnTimer = setTimeout(() => {
+          selectDate(todayStr);
+        }, 60000);
+      }
+    }
+
+    /* METAS */
+    function openModalMetas() {
+      document.getElementById('goalKcalInput').value = APP_STATE.goals.kcal;
+      document.getElementById('goalProteinInput').value = APP_STATE.goals.protein;
+      document.getElementById('goalCarbsInput').value = APP_STATE.goals.carbs;
+      document.getElementById('goalFatInput').value = APP_STATE.goals.fat;
+      document.getElementById('modalMetas').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeModalMetas() {
+      document.getElementById('modalMetas').classList.add('hidden');
+    }
+
+    function saveGoals() {
+      APP_STATE.goals.kcal = Number(document.getElementById('goalKcalInput').value) || 2400;
+      APP_STATE.goals.protein = Number(document.getElementById('goalProteinInput').value) || 160;
+      APP_STATE.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 280;
+      APP_STATE.goals.fat = Number(document.getElementById('goalFatInput').value) || 65;
+
+      document.getElementById('dashMetaKcalLabel').innerText = `${APP_STATE.goals.kcal} kcal`;
+      document.getElementById('dashKcalTargetLabel').innerText = `/ ${APP_STATE.goals.kcal} kcal`;
+      document.getElementById('dashProtTargetLabel').innerText = `/ ${APP_STATE.goals.protein}g`;
+      document.getElementById('dashCarbTargetLabel').innerText = `/ ${APP_STATE.goals.carbs}g`;
+      document.getElementById('dashGrasTargetLabel').innerText = `/ ${APP_STATE.goals.fat}g`;
+
+      persistData();
+      closeModalMetas();
+      updateNutritionDashboard();
+    }
+
+    /* COMIDAS: GESTION DE ALIMENTOS Y TOMAS */
+    function openModalGestionAlimentos() {
+      document.getElementById('modalGestionAlimentos').classList.remove('hidden');
+      renderGestionAlimentos();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeModalGestionAlimentos() {
+      document.getElementById('modalGestionAlimentos').classList.add('hidden');
+    }
+
+    function openModalConfigComidas() {
+      document.getElementById('modalConfigComidas').classList.remove('hidden');
+      renderConfigComidas();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeModalConfigComidas() {
+      document.getElementById('modalConfigComidas').classList.add('hidden');
+    }
+
+    function renderConfigComidas() {
+      const box = document.getElementById('listaConfigComidas');
+      if (!box) return;
+      box.innerHTML = APP_STATE.mealTypes.map((tipo, idx) => `
+        <div class="flex items-center gap-2 mb-2">
+          <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs font-semibold meal-type-input" data-index="${idx}" value="${tipo}"/>
+          <button onclick="eliminarTipoComida(${idx})" class="p-2 opacity-60 hover:opacity-100 text-red-500 transition" title="Eliminar comida"><i class="w-4 h-4" data-lucide="trash-2"></i></button>
+        </div>
+      `).join('') + `
+        <button onclick="agregarNuevoTipoComida()" class="w-full py-2 rounded-xl slate-item text-xs font-semibold border-dashed opacity-80 hover:opacity-100 transition mt-2">+ Añadir nueva comida</button>
+      `;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function agregarNuevoTipoComida() {
+      const nuevo = prompt("Nombre de la nueva comida (ej. Media Mañana):");
+      if (nuevo && nuevo.trim() !== "") {
+        APP_STATE.mealTypes.push(nuevo.trim());
+        renderConfigComidas();
+      }
+    }
+
+    function eliminarTipoComida(idx) {
+      if(APP_STATE.mealTypes.length <= 1) {
+        alert("Debes mantener al menos una comida configurada.");
+        return;
+      }
+      APP_STATE.mealTypes.splice(idx, 1);
+      renderConfigComidas();
+    }
+
+    function guardarConfigComidas() {
+      const inputs = document.querySelectorAll('.meal-type-input');
+      const nuevosTipos = [];
+      inputs.forEach(inp => {
+        const val = inp.value.trim();
+        if(val) nuevosTipos.push(val);
+      });
+      if(nuevosTipos.length > 0) {
+        APP_STATE.mealTypes = nuevosTipos;
+        if(!APP_STATE.mealTypes.includes(APP_STATE.currentMealType)) {
+          APP_STATE.currentMealType = APP_STATE.mealTypes[0];
+        }
+        persistData();
+        renderMealTypeButtons();
+      }
+      closeModalConfigComidas();
+    }
+
+    function renderMealTypeButtons() {
+      const container = document.getElementById('mealTypeButtonsContainer');
+      if(!container) return;
+      container.style.gridTemplateColumns = `repeat(${Math.min(APP_STATE.mealTypes.length, 4)}, minmax(0, 1fr))`;
+      container.innerHTML = APP_STATE.mealTypes.map(tipo => {
+        const isSel = tipo === APP_STATE.currentMealType;
+        return `<button class="meal-pill py-2 rounded-full text-xs font-semibold text-center transition truncate px-1 ${isSel ? 'btn-primary shadow' : 'opacity-60 hover:opacity-100'}" onclick="selectMealType('${tipo}', this)">${tipo}</button>`;
+      }).join('');
+    }
+
+    function renderGestionAlimentos() {
+      const box = document.getElementById('listaAlimentosGestion');
+      if (!box) return;
+      box.innerHTML = APP_STATE.alimentos_base.map((a, idx) => `
+        <div class="p-3 rounded-2xl slate-item flex items-center justify-between text-xs mb-2 transition-all">
+          <div class="flex-1 pr-2">
+            <h4 class="font-bold">${a.name}</h4>
+            <p class="text-[11px] opacity-60 mt-0.5">${a.kcal} kcal | P:${a.prot} C:${a.carb} G:${a.gras} por ${a.baseQty}${a.unit}</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="editarAlimentoBase(${idx})" class="p-1.5 opacity-60 hover:opacity-100 transition" title="Renombrar"><i class="w-4 h-4" data-lucide="edit-2"></i></button>
+            <button onclick="eliminarAlimentoBase(${idx})" class="p-1.5 opacity-60 hover:opacity-100 text-red-500 transition" title="Eliminar"><i class="w-4 h-4" data-lucide="trash-2"></i></button>
+          </div>
+        </div>
+      `).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function editarAlimentoBase(idx) {
+      const a = APP_STATE.alimentos_base[idx];
+      const nuevoNombre = prompt("Modificar nombre del alimento:", a.name);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        a.name = nuevoNombre.trim();
+        persistData();
+        renderGestionAlimentos();
+      }
+    }
+
+    function eliminarAlimentoBase(idx) {
+      if(confirm("¿Seguro que quieres eliminar este alimento de tu catálogo?")) {
+        APP_STATE.alimentos_base.splice(idx, 1);
+        persistData();
+        renderGestionAlimentos();
+      }
+    }
+
+    function selectMealType(tipo, btn) {
+      APP_STATE.currentMealType = tipo;
+      const buttons = btn?.parentElement?.querySelectorAll('.meal-pill');
+      if (buttons) {
+        buttons.forEach(b => {
+          b.className = "meal-pill py-2 rounded-full text-xs font-semibold opacity-60 hover:opacity-100 text-center transition truncate px-1";
+        });
+        btn.className = "meal-pill py-2 rounded-full text-xs font-semibold btn-primary shadow text-center transition truncate px-1";
+      }
+    }
+
+    function setPortionUnit(unit) {
+      APP_STATE.portionUnit = unit;
+      const btnG = document.getElementById('btnUnitGrams');
+      const btnUd = document.getElementById('btnUnitPcs');
+      if (unit === 'g') {
+        btnG.className = "flex-1 py-2 text-xs font-bold rounded-full btn-primary transition";
+        btnUd.className = "flex-1 py-2 text-xs font-semibold rounded-full opacity-60 hover:opacity-100 transition";
+        if (document.getElementById('foodAmountInput').value == "1") {
+          document.getElementById('foodAmountInput').value = "100";
+        }
+      } else {
+        btnUd.className = "flex-1 py-2 text-xs font-bold rounded-full btn-primary transition";
+        btnG.className = "flex-1 py-2 text-xs font-semibold rounded-full opacity-60 hover:opacity-100 transition";
+        if (document.getElementById('foodAmountInput').value == "100") {
+          document.getElementById('foodAmountInput').value = "1";
+        }
+      }
+      calculatePreviewMacros();
+    }
+
+    function onFoodSearchInput(val) {
+      const query = (val || '').toLowerCase().trim();
+      const box = document.getElementById('foodSuggestions');
+      if (!query) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      const matches = APP_STATE.alimentos_base.filter(a => a.name.toLowerCase().includes(query));
+      if (matches.length === 0) {
+        box.innerHTML = `<div class="p-3 text-xs opacity-60 text-center">No se encontraron alimentos en tu catálogo.</div>`;
+      } else {
+        box.innerHTML = matches.map((m, idx) => `
+          <div class="p-3 text-xs hover:opacity-60 cursor-pointer flex justify-between items-center border-b border-[var(--app-border)]" onclick="selectFoodItemByIndex(${idx})">
+            <div>
+              <span class="font-bold block">${m.name}</span>
+              <span class="text-[10px] opacity-60">${m.kcal} kcal · P: ${m.prot}g · C: ${m.carb}g · G: ${m.gras}g (${m.baseQty}${m.unit})</span>
+            </div>
+            <i class="w-3.5 h-3.5 opacity-60" data-lucide="corner-down-left"></i>
+          </div>
+        `).join('');
+      }
+      box.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function selectFoodItemByIndex(idx) {
+      selectFoodItem(APP_STATE.alimentos_base[idx]);
+      document.getElementById('foodSuggestions').classList.add('hidden');
+    }
+
+    function selectFoodItem(item) {
+      APP_STATE.selectedFood = item;
+      document.getElementById('foodSearchInput').value = item.name;
+      setPortionUnit(item.unit);
+      document.getElementById('foodAmountInput').value = item.baseQty;
+      calculatePreviewMacros();
+    }
+
+    function calculatePreviewMacros() {
+      const item = APP_STATE.selectedFood;
+      const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0;
+      if (!item || qty <= 0) {
+        document.getElementById('previewFoodKcal').innerText = '0';
+        document.getElementById('previewFoodProt').innerText = '0g';
+        document.getElementById('previewFoodCarb').innerText = '0g';
+        document.getElementById('previewFoodGras').innerText = '0g';
+        return;
+      }
+
+      const multiplier = item.unit === 'g' ? (qty / 100) : (qty / item.baseQty);
+      const kcal = Math.round(item.kcal * multiplier);
+      const prot = Math.round(item.prot * multiplier * 10) / 10;
+      const carb = Math.round(item.carb * multiplier * 10) / 10;
+      const gras = Math.round(item.gras * multiplier * 10) / 10;
+
+      document.getElementById('previewFoodKcal').innerText = kcal;
+      document.getElementById('previewFoodProt').innerText = `${prot}g`;
+      document.getElementById('previewFoodCarb').innerText = `${carb}g`;
+      document.getElementById('previewFoodGras').innerText = `${gras}g`;
+    }
+
+    function registrarComida() {
+      const item = APP_STATE.selectedFood;
+      const qty = parseFloat(document.getElementById('foodAmountInput').value) || 0;
+      if (!item || qty <= 0) {
+        alert('Selecciona un alimento válido y una cantidad.');
+        return;
+      }
+
+      const multiplier = item.unit === 'g' ? (qty / 100) : (qty / item.baseQty);
+      const meal = {
+        id: Date.now(),
+        name: item.name,
+        mealType: APP_STATE.currentMealType,
+        qty: qty,
+        unit: APP_STATE.portionUnit,
+        kcal: Math.round(item.kcal * multiplier),
+        prot: Math.round(item.prot * multiplier * 10) / 10,
+        carb: Math.round(item.carb * multiplier * 10) / 10,
+        gras: Math.round(item.gras * multiplier * 10) / 10,
+        date: getTodayStr(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      APP_STATE.comidas_diarias.push(meal);
+      persistData();
+      renderTodayMeals();
+      updateNutritionDashboard();
+      
+      document.getElementById('foodSearchInput').value = '';
+      document.getElementById('foodAmountInput').value = '100';
+      document.getElementById('foodSuggestions').classList.add('hidden');
+      APP_STATE.selectedFood = null;
+      calculatePreviewMacros();
+
+      const btn = document.getElementById('btnGuardarComida');
+      if(btn) {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="w-4 h-4" data-lucide="check"></i><span>¡Añadido!</span>';
+        btn.classList.add('bg-emerald-500', 'text-white');
+        if(window.lucide) lucide.createIcons();
+        setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.classList.remove('bg-emerald-500', 'text-white');
+          if(window.lucide) lucide.createIcons();
+        }, 1500);
+      }
+    }
+
+    function editarComida(id) {
+      const m = APP_STATE.comidas_diarias.find(x => x.id === id);
+      if (!m) return;
+      const nuevaCant = prompt(`Modificar cantidad de ${m.name} (${m.unit}):`, m.qty);
+      if (nuevaCant !== null) {
+        const qty = parseFloat(nuevaCant);
+        if (!isNaN(qty) && qty > 0) {
+          const ratio = qty / m.qty;
+          m.qty = qty;
+          m.kcal = Math.round(m.kcal * ratio);
+          m.prot = Math.round(m.prot * ratio * 10) / 10;
+          m.carb = Math.round(m.carb * ratio * 10) / 10;
+          m.gras = Math.round(m.gras * ratio * 10) / 10;
+          persistData();
+          renderTodayMeals();
+          updateNutritionDashboard();
+        } else {
+          alert('Cantidad introducida inválida.');
+        }
+      }
+    }
+
+    function eliminarComida(id) {
+      APP_STATE.comidas_diarias = APP_STATE.comidas_diarias.filter(m => m.id !== id);
+      persistData();
+      renderTodayMeals();
+      updateNutritionDashboard();
+    }
+
+    function renderTodayMeals() {
+      const container = document.getElementById('todayMealsList');
+      const countLabel = document.getElementById('totalMealsCount');
+      if (!container) return;
+
+      const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
+      countLabel.innerText = `${filteredMeals.length} items`;
+
+      if (filteredMeals.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-xs opacity-60">No hay alimentos registrados en este día.</div>`;
+        return;
+      }
+
+      container.innerHTML = filteredMeals.map(m => `
+        <div class="flex items-center justify-between p-3 rounded-2xl slate-item transition">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-bold">
+              ${m.mealType[0]}
+            </div>
+            <div>
+              <h4 class="text-xs font-bold">${m.name}</h4>
+              <p class="text-[11px] opacity-60">${m.qty}${m.unit} · ${m.mealType} · ${m.time}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-right">
+              <span class="text-xs font-bold block">${m.kcal} kcal</span>
+              <span class="text-[10px] opacity-60">P:${m.prot} C:${m.carb} G:${m.gras}</span>
+            </div>
+            <div class="flex flex-col gap-1 border-l border-[var(--app-border)] pl-2 ml-1">
+              <button onclick="editarComida(${m.id})" class="opacity-60 hover:opacity-100 p-1 transition" title="Editar cantidad">
+                <i class="w-3.5 h-3.5" data-lucide="edit-2"></i>
+              </button>
+              <button onclick="eliminarComida(${m.id})" class="opacity-60 hover:opacity-100 text-red-500 p-1 transition" title="Eliminar">
+                <i class="w-3.5 h-3.5" data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateNutritionDashboard() {
+      const filteredMeals = APP_STATE.comidas_diarias.filter(m => m.date === APP_STATE.selectedDate || (!m.date && APP_STATE.selectedDate === getTodayStr()));
+      const totals = filteredMeals.reduce((acc, cur) => {
+        acc.kcal += cur.kcal;
+        acc.prot += cur.prot;
+        acc.carb += cur.carb;
+        acc.gras += cur.gras;
+        return acc;
+      }, { kcal: 0, prot: 0, carb: 0, gras: 0 });
+
+      const kcalEl = document.getElementById('dashKcalTotal');
+      if (kcalEl) kcalEl.innerText = totals.kcal;
+
+      const pctKcal = Math.min(Math.round((totals.kcal / APP_STATE.goals.kcal) * 100), 100);
+      document.getElementById('dashKcalPercent').innerText = `${pctKcal}%`;
+      document.getElementById('dashKcalBar').style.width = `${pctKcal}%`;
+
+      document.getElementById('dashProtVal').innerText = `${Math.round(totals.prot)}g`;
+      const pctProt = Math.min(Math.round((totals.prot / APP_STATE.goals.protein) * 100), 100);
+      document.getElementById('dashProtPct').innerText = `${pctProt}%`;
+      document.getElementById('dashProtBar').style.width = `${pctProt}%`;
+
+      document.getElementById('dashCarbVal').innerText = `${Math.round(totals.carb)}g`;
+      const pctCarb = Math.min(Math.round((totals.carb / APP_STATE.goals.carbs) * 100), 100);
+      document.getElementById('dashCarbPct').innerText = `${pctCarb}%`;
+      document.getElementById('dashCarbBar').style.width = `${pctCarb}%`;
+
+      document.getElementById('dashGrasVal').innerText = `${Math.round(totals.gras)}g`;
+      const pctGras = Math.min(Math.round((totals.gras / APP_STATE.goals.fat) * 100), 100);
+      document.getElementById('dashGrasPct').innerText = `${pctGras}%`;
+      document.getElementById('dashGrasBar').style.width = `${pctGras}%`;
+
+      document.getElementById('histKcalVal').innerText = totals.kcal;
+      document.getElementById('histKcalTarget').innerText = `/ ${APP_STATE.goals.kcal}`;
+      document.getElementById('histProtVal').innerText = `${Math.round(totals.prot)}g`;
+      document.getElementById('histProtTarget').innerText = `/ ${APP_STATE.goals.protein}g`;
+      document.getElementById('histCarbVal').innerText = `${Math.round(totals.carb)}g`;
+      document.getElementById('histCarbTarget').innerText = `/ ${APP_STATE.goals.carbs}g`;
+      document.getElementById('histGrasVal').innerText = `${Math.round(totals.gras)}g`;
+      document.getElementById('histGrasTarget').innerText = `/ ${APP_STATE.goals.fat}g`;
+    }
+
+    /* CREAR ALIMENTO NUEVO */
+    function openModalCrearAlimento() {
+      document.getElementById('customFoodName').value = '';
+      document.getElementById('customFoodKcal').value = '';
+      document.getElementById('customFoodProt').value = '';
+      document.getElementById('customFoodCarb').value = '';
+      document.getElementById('customFoodGras').value = '';
+      document.getElementById('modalCrearAlimento').classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeModalCrearAlimento() {
+      document.getElementById('modalCrearAlimento').classList.add('hidden');
+    }
+
+    function guardarNuevoAlimento() {
+      const name = document.getElementById('customFoodName').value.trim();
+      const unit = document.getElementById('customFoodUnit').value;
+      const kcal = parseFloat(document.getElementById('customFoodKcal').value) || 0;
+      const prot = parseFloat(document.getElementById('customFoodProt').value) || 0;
+      const carb = parseFloat(document.getElementById('customFoodCarb').value) || 0;
+      const gras = parseFloat(document.getElementById('customFoodGras').value) || 0;
+
+      if (!name || kcal <= 0) {
+        alert('Introduce un nombre y calorías válidas.');
+        return;
+      }
+
+      const nuevo = { name, unit, baseQty: unit === 'g' ? 100 : 1, kcal, prot, carb, gras };
+      APP_STATE.alimentos_base.unshift(nuevo);
+      persistData();
+      selectFoodItem(nuevo);
+      closeModalCrearAlimento();
+    }
+
+    /* RUTINAS */
+    function renderRoutineCards() {
+      const container = document.getElementById('routineCardsContainer');
+      if (!container) return;
+      container.innerHTML = APP_STATE.routines.map(r => {
+        const isSel = r.id === APP_STATE.selectedRoutineId;
+        return `
+          <button onclick="selectRoutine('${r.id}')" class="p-3 rounded-2xl border text-left transition active:scale-95 ${isSel ? 'border-slate-900 bg-slate-100 dark:border-white dark:bg-[#21242C]' : 'bg-white dark:bg-[#181A20] border-slate-200 dark:border-white/10'}">
+            <span class="text-[10px] text-slate-400 block">${r.exercises.length} ej.</span>
+            <h4 class="text-xs font-semibold truncate text-slate-900 dark:text-white">${r.name}</h4>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectRoutine(id) {
+      APP_STATE.selectedRoutineId = id;
+      renderRoutineCards();
+      renderPreviewRoutine();
+    }
+
+    function getCurrentRoutine() {
+      return APP_STATE.routines.find(r => r.id === APP_STATE.selectedRoutineId) || APP_STATE.routines[0];
+    }
+
+    function renderPreviewRoutine() {
+      const routine = getCurrentRoutine();
+      if (!routine) return;
+
+      const titleEl = document.getElementById('previewRoutineTitle');
+      if (titleEl) {
+        titleEl.innerText = routine.name;
+        titleEl.className = "text-lg font-bold mt-1";
+      }
+      document.getElementById('previewRoutineDesc').innerText = routine.desc;
+
+      const list = document.getElementById('previewExercisesList');
+      list.innerHTML = routine.exercises.map((e) => `
+        <div class="flex items-center justify-between p-2.5 rounded-2xl slate-item text-xs border-transparent">
+          <div>
+            <span class="font-bold">${e.name}</span>
+            <span class="text-[10px] opacity-60 block">${e.muscle} · Meta: ${e.targetSets} series</span>
+          </div>
+          <span class="text-[11px] font-semibold opacity-60">${e.defaultWeight || 0} kg</span>
+        </div>
+      `).join('');
+    }
+
+    /* SESIÓN ACTIVA */
+    function updateActiveWorkoutProgress() {
+      const routine = getCurrentRoutine();
+      if (!routine) return;
+      const totalTargetSets = routine.exercises.reduce((acc, ex) => acc + (ex.targetSets || 0), 0);
+      const completedSets = APP_STATE.activeSession.setsCompletedInSession.length;
+      const pct = totalTargetSets > 0 ? Math.min(100, Math.round((completedSets / totalTargetSets) * 100)) : 0;
+      
+      const textEl = document.getElementById('activeWorkoutProgressText');
+      const barEl = document.getElementById('activeWorkoutProgressBar');
+      if (textEl) textEl.innerText = `${pct}%`;
+      if (barEl) barEl.style.width = `${pct}%`;
+    }
+
+    function iniciarOContinuarSesionActiva() {
+      const routine = getCurrentRoutine();
+      if (!routine || routine.exercises.length === 0) {
+        alert('Selecciona una rutina válida con ejercicios.');
+        return;
+      }
+
+      APP_STATE.activeSession.isRunning = true;
+      APP_STATE.activeSession.routineId = routine.id;
+
+      document.getElementById('panelActiveWorkoutSession').classList.remove('hidden');
+      document.getElementById('btnStartOrResumeWorkoutText').innerText = 'Continuar Entrenamiento';
+      document.getElementById('activeWorkoutRoutineName').innerText = routine.name;
+
+      renderActiveExerciseView();
+      document.getElementById('panelActiveWorkoutSession').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderActiveExerciseView() {
+      const routine = getCurrentRoutine();
+      const exIndex = APP_STATE.activeSession.exerciseIndex;
+      const currentEx = routine.exercises[exIndex];
+
+      document.getElementById('activeMuscleLabel').innerText = currentEx.muscle || 'Músculo';
+      const exBadge = document.getElementById('activeExBadge');
+      if (exBadge) {
+        exBadge.innerText = currentEx.name;
+        exBadge.className = "text-xl font-bold tracking-tight";
+      }
+      document.getElementById('activeSetBadge').innerText = `Serie ${APP_STATE.activeSession.currentSetNum} de ${currentEx.targetSets}`;
+      document.getElementById('activeInputWeight').value = currentEx.defaultWeight || 60;
+      document.getElementById('activeInputReps').value = currentEx.defaultReps || 10;
+      renderActiveExerciseSetsHistory();
+
+      const isFirst = exIndex === 0;
+      const isLast = exIndex === routine.exercises.length - 1;
+      const btnPrev = document.getElementById('btnNavExAnterior');
+      const btnNext = document.getElementById('btnNavExSiguiente');
+      if (btnPrev) btnPrev.style.display = isFirst ? 'none' : 'flex';
+      if (btnNext) btnNext.style.display = isLast ? 'none' : 'flex';
+
+      try {
+        const rawData = localStorage.getItem('fitpulse_exercise_records');
+        const history = rawData ? JSON.parse(rawData) : {};
+        const lastRecord = history[currentEx.name];
+        const recordTextEl = document.getElementById('activeExLastRecordText');
+
+        if (lastRecord && recordTextEl) {
+          recordTextEl.innerText = `${lastRecord.weight} kg × ${lastRecord.reps} reps (${lastRecord.date})`;
+          if (APP_STATE.activeSession.currentSetNum === 1) {
+            document.getElementById('activeInputWeight').value = lastRecord.weight;
+            document.getElementById('activeInputReps').value = lastRecord.reps;
+          }
+        } else if (recordTextEl) {
+          recordTextEl.innerText = 'Primera vez en rutina';
+        }
+      } catch(e) {
+        const recordTextEl = document.getElementById('activeExLastRecordText');
+        if (recordTextEl) recordTextEl.innerText = 'Historial disponible';
+      }
+
+      updateActiveWorkoutProgress();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderActiveExerciseSetsHistory() {
+      const container = document.getElementById('activeExerciseSetsHistory');
+      const routine = getCurrentRoutine();
+      const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex];
+
+      const setsThisEx = APP_STATE.series_entreno.filter(s => s.exerciseName === currentEx.name && (s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr())));
+      
+      if (setsThisEx.length === 0) {
+        container.innerHTML = `<span class="text-xs opacity-60 italic">No hay series completadas aún.</span>`;
+        return;
+      }
+
+      container.innerHTML = setsThisEx.map((s, idx) => `
+        <div class="flex items-center justify-between px-3 py-1.5 rounded-xl slate-item text-xs border-transparent">
+          <span class="font-semibold opacity-80">Serie ${idx + 1}</span>
+          <span class="font-bold">${s.weight} kg × ${s.reps} reps</span>
+          <span class="text-[10px] text-emerald-500 font-bold">✓ Hecha</span>
+        </div>
+      `).join('');
+    }
+
+    function completarSerieActiva() {
+      const routine = getCurrentRoutine();
+      const currentEx = routine.exercises[APP_STATE.activeSession.exerciseIndex];
+      const weight = parseFloat(document.getElementById('activeInputWeight').value) || 0;
+      const reps = parseInt(document.getElementById('activeInputReps').value) || 0;
+
+      const setObj = {
+        id: Date.now(),
+        routineName: routine.name,
+        exerciseName: currentEx.name,
+        muscle: currentEx.muscle,
+        setNum: APP_STATE.activeSession.currentSetNum,
+        weight,
+        reps,
+        date: getTodayStr(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      APP_STATE.series_entreno.push(setObj);
+      APP_STATE.activeSession.setsCompletedInSession.push(setObj);
+      persistData();
+
+      if (APP_STATE.activeSession.currentSetNum < currentEx.targetSets) {
+        APP_STATE.activeSession.currentSetNum++;
+      } else {
+        if (APP_STATE.activeSession.exerciseIndex < routine.exercises.length - 1) {
+          APP_STATE.activeSession.exerciseIndex++;
+          APP_STATE.activeSession.currentSetNum = 1;
+        }
+      }
+
+      try {
+        const rawData = localStorage.getItem('fitpulse_exercise_records');
+        const history = rawData ? JSON.parse(rawData) : {};
+        const today = new Date().toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+        history[currentEx.name] = { weight, reps, date: today };
+        localStorage.setItem('fitpulse_exercise_records', JSON.stringify(history));
+      } catch(e) {}
+
+      updateActiveWorkoutProgress();
+      renderActiveExerciseView();
+      renderSetsDashboard();
+      startRestTimer(90);
+    }
+
+    function siguienteEjercicio() {
+      const routine = getCurrentRoutine();
+      if (APP_STATE.activeSession.exerciseIndex < routine.exercises.length - 1) {
+        APP_STATE.activeSession.exerciseIndex++;
+        APP_STATE.activeSession.currentSetNum = 1;
+        renderActiveExerciseView();
+      }
+    }
+
+    function ejercicioAnterior() {
+      if (APP_STATE.activeSession.exerciseIndex > 0) {
+        APP_STATE.activeSession.exerciseIndex--;
+        APP_STATE.activeSession.currentSetNum = 1;
+        renderActiveExerciseView();
+      }
+    }
+
+    function finalizarEntrenamiento() {
+      const modal = document.getElementById('modalConfirmFinalizar');
+      if (modal) {
+        modal.classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+      } else {
+        ejecutarFinEntrenamiento();
+      }
+    }
+
+    function cerrarConfirmFinalizar() {
+      const modal = document.getElementById('modalConfirmFinalizar');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function ejecutarFinEntrenamiento() {
+      cerrarConfirmFinalizar();
+      APP_STATE.activeSession.isRunning = false;
+      APP_STATE.activeSession.exerciseIndex = 0;
+      APP_STATE.activeSession.currentSetNum = 1;
+      APP_STATE.activeSession.setsCompletedInSession = [];
+      
+      document.getElementById('panelActiveWorkoutSession').classList.add('hidden');
+      document.getElementById('btnStartOrResumeWorkoutText').innerText = 'Empezar Entrenamiento';
+      stopTimer();
+      switchTab('hoy');
+    }
+
+    function renderSetsDashboard() {
+      const countLabel = document.getElementById('dashSetsCount');
+      const container = document.getElementById('dashSetsList');
+      if (!countLabel || !container) return;
+
+      const filteredSets = APP_STATE.series_entreno.filter(s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()));
+      countLabel.innerText = `${filteredSets.length} completadas`;
+
+      if (filteredSets.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-xs opacity-60" id="dashSetsEmpty">
+            <i class="w-6 h-6 mx-auto mb-1 opacity-40" data-lucide="calendar-x"></i>
+            Aún no has registrado series en este día.<br/>Ve a la pestaña <strong>Entreno</strong> para comenzar.
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      container.innerHTML = filteredSets.slice().reverse().map(s => `
+        <div class="flex items-center justify-between p-2.5 rounded-2xl slate-item text-xs border-transparent">
+          <div>
+            <span class="font-bold">${s.exerciseName}</span>
+            <span class="text-[10px] opacity-60 block">${s.routineName} · Serie ${s.setNum}</span>
+          </div>
+          <div class="text-right">
+            <span class="font-bold">${s.weight} kg × ${s.reps}</span>
+            <span class="text-[10px] opacity-60 block">${s.time}</span>
+          </div>
+        </div>
+      `).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateHistorialSummary() {
+      const summaryBox = document.getElementById('historialSetsSummary');
+      const summaryCount = document.getElementById('historialSetsCount');
+      if (!summaryBox) return;
+
+      const filteredSets = APP_STATE.series_entreno.filter(s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr()));
+      summaryCount.innerText = `${filteredSets.length} series registradas`;
+
+      if (filteredSets.length === 0) {
+        summaryBox.innerHTML = `<p class="text-xs opacity-60 text-center py-4">No hay entrenamientos completados registrados en esta sesión.</p>`;
+        return;
+      }
+
+      const grouped = {};
+      filteredSets.forEach(s => {
+        if (!grouped[s.exerciseName]) grouped[s.exerciseName] = { sets: 0, maxWeight: 0, reps: 0 };
+        grouped[s.exerciseName].sets++;
+        if (s.weight > grouped[s.exerciseName].maxWeight) grouped[s.exerciseName].maxWeight = s.weight;
+        grouped[s.exerciseName].reps += s.reps;
+      });
+
+      summaryBox.innerHTML = Object.entries(grouped).map(([name, data]) => `
+        <div class="flex items-center justify-between p-3 rounded-2xl slate-item text-xs border-transparent">
+          <div>
+            <span class="font-bold">${name}</span>
+            <span class="text-[10px] opacity-60 block">${data.sets} series completadas</span>
+          </div>
+          <div class="text-right">
+            <span class="font-bold">Max: ${data.maxWeight} kg</span>
+            <span class="text-[10px] opacity-60 block">${data.reps} reps totales</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* GESTIÓN RUTINAS Y CATÁLOGO */
+    function openModalGestion() {
+      document.getElementById('modalGestion').classList.remove('hidden');
+      renderGestionRutinas();
+      renderGestionEjercicios();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeModalGestion() {
+      document.getElementById('modalGestion').classList.add('hidden');
+    }
+
+    function switchGestionTab(tab) {
+      const btnR = document.getElementById('tabBtnGestionRutinas');
+      const btnE = document.getElementById('tabBtnGestionEjercicios');
+      const secR = document.getElementById('sectionGestionRutinas');
+      const secE = document.getElementById('sectionGestionEjercicios');
+
+      const activeClasses = "py-2 rounded-full btn-primary shadow-sm transition";
+      const inactiveClasses = "py-2 rounded-full opacity-60 hover:opacity-100 transition";
+
+      if (tab === 'rutinas') {
+        btnR.className = activeClasses;
+        btnE.className = inactiveClasses;
+        secR.classList.remove('hidden');
+        secE.classList.add('hidden');
+      } else {
+        btnE.className = activeClasses;
+        btnR.className = inactiveClasses;
+        secE.classList.remove('hidden');
+        secR.classList.add('hidden');
+      }
+    }
+
+    function renderGestionRutinas() {
+      const box = document.getElementById('listaRutinasGestion');
+      if (!box) return;
+      box.innerHTML = APP_STATE.routines.map(r => {
+        const isSelected = r.id === APP_STATE.selectedRoutineId;
+        return `
+        <div class="p-3 rounded-2xl slate-item border ${isSelected ? '!border-emerald-500' : ''} flex items-center justify-between text-xs mb-2 transition-all">
+          <div class="flex-1 pr-2 cursor-pointer" onclick="seleccionarRutinaDesdeModal('${r.id}')" title="Toca para gestionar sus ejercicios">
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <h4 class="font-bold ${isSelected ? 'text-emerald-600 dark:text-emerald-400' : ''}">${r.name}</h4>
+              ${isSelected ? '<span class="text-[9px] px-1.5 py-0.5 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 rounded-full">Editando</span>' : ''}
+            </div>
+            <p class="text-[11px] opacity-60">${r.desc} (${r.exercises.length} ejercicios)</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="editarRutina('${r.id}')" class="p-1.5 opacity-60 hover:opacity-100 transition"><i class="w-4 h-4" data-lucide="edit-2"></i></button>
+            <button onclick="eliminarRutina('${r.id}')" class="p-1.5 opacity-60 hover:opacity-100 text-red-500 transition"><i class="w-4 h-4" data-lucide="trash-2"></i></button>
+          </div>
+        </div>
+      `}).join('');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderGestionEjercicios() {
+      const box = document.getElementById('listaEjerciciosCatalogo');
+      if (!box) return;
+      const r = getCurrentRoutine();
+      
+      let html = `<div class="mb-3 pb-2 border-b border-[var(--app-border)] text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Añadiendo a: <span class="var(--text-main)">${r.name}</span></div>`;
+
+      if (!r || !r.exercises || r.exercises.length === 0) {
+        html += `<p class="text-xs opacity-60 text-center py-4">Esta rutina no tiene ejercicios. Crea uno abajo.</p>`;
+      } else {
+        html += r.exercises.map((c, idx) => `
+          <div class="p-2.5 rounded-xl slate-item flex items-center justify-between text-xs mb-2 border-transparent">
+            <div>
+              <span class="font-medium">${c.name}</span>
+              <span class="text-[10px] opacity-60 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 ml-2">${c.muscle}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="editarEjercicio(${idx})" class="p-1 opacity-60 hover:opacity-100 transition"><i class="w-3.5 h-3.5" data-lucide="edit-2"></i></button>
+              <button onclick="eliminarEjercicio(${idx})" class="p-1 opacity-60 hover:opacity-100 text-red-500 transition"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button>
+            </div>
+          </div>
+        `).join('');
+      }
+      box.innerHTML = html;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function crearNuevaRutina() {
+      const name = document.getElementById('nuevaRutinaNombre').value.trim();
+      const desc = document.getElementById('nuevaRutinaDesc').value.trim();
+      if (!name) {
+        alert('Introduce un nombre para la rutina');
+        return;
+      }
+      
+      const id = 'r_' + Date.now();
+      APP_STATE.routines.push({
+        id,
+        name,
+        desc: desc || 'Personalizada',
+        exercises: [] 
+      });
+      
+      APP_STATE.selectedRoutineId = id;
+      persistData();
+      
+      document.getElementById('nuevaRutinaNombre').value = '';
+      document.getElementById('nuevaRutinaDesc').value = '';
+      
+      renderGestionRutinas();
+      renderRoutineCards();
+      renderPreviewRoutine();
+      renderGestionEjercicios();
+      
+      switchGestionTab('ejercicios');
+    }
+
+    function crearNuevoEjercicioCatalogo() {
+      const name = document.getElementById('nuevoEjercicioNombre').value.trim();
+      const muscle = document.getElementById('nuevoEjercicioMusculo').value;
+      if (!name) {
+        alert('Introduce un nombre para el ejercicio');
+        return;
+      }
+
+      const r = getCurrentRoutine();
+      r.exercises.push({ name, targetSets: 4, muscle, defaultWeight: 40, defaultReps: 10 });
+      persistData();
+      document.getElementById('nuevoEjercicioNombre').value = '';
+      renderPreviewRoutine();
+      renderGestionEjercicios();
+    }
+
+    function seleccionarRutinaDesdeModal(id) {
+      APP_STATE.selectedRoutineId = id;
+      persistData();
+      renderRoutineCards();
+      renderPreviewRoutine();
+      renderGestionRutinas();
+      renderGestionEjercicios();
+      switchGestionTab('ejercicios');
+    }
+
+    function eliminarRutina(id) {
+      if (APP_STATE.routines.length <= 1) {
+        alert("No puedes eliminar la última rutina restante.");
+        return;
+      }
+      if (confirm("¿Seguro que quieres eliminar esta rutina por completo?")) {
+        APP_STATE.routines = APP_STATE.routines.filter(r => r.id !== id);
+        if (APP_STATE.selectedRoutineId === id) {
+          APP_STATE.selectedRoutineId = APP_STATE.routines[0].id;
+        }
+        persistData();
+        renderGestionRutinas();
+        renderRoutineCards();
+        renderPreviewRoutine();
+        renderGestionEjercicios();
+      }
+    }
+
+    function editarRutina(id) {
+      const r = APP_STATE.routines.find(x => x.id === id);
+      if (!r) return;
+      const nuevoNombre = prompt("Modificar nombre de la rutina:", r.name);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        r.name = nuevoNombre.trim();
+        persistData();
+        renderGestionRutinas();
+        renderRoutineCards();
+        renderPreviewRoutine();
+        renderGestionEjercicios();
+      }
+    }
+
+    function eliminarEjercicio(index) {
+      const r = getCurrentRoutine();
+      if (confirm("¿Eliminar este ejercicio de la rutina actual?")) {
+        r.exercises.splice(index, 1);
+        persistData();
+        renderGestionEjercicios();
+        renderPreviewRoutine();
+      }
+    }
+
+    function editarEjercicio(index) {
+      const r = getCurrentRoutine();
+      const ex = r.exercises[index];
+      const nuevoNombre = prompt("Modificar nombre del ejercicio:", ex.name);
+      if (nuevoNombre && nuevoNombre.trim() !== "") {
+        ex.name = nuevoNombre.trim();
+        persistData();
+        renderGestionEjercicios();
+        renderPreviewRoutine();
+      }
+    }
+
+    /* TIMER */
+    function startRestTimer(segundos = 90) {
+      stopTimer();
+      APP_STATE.timer.totalSeconds = segundos;
+      APP_STATE.timer.remainingSeconds = segundos;
+      APP_STATE.timer.isPaused = false;
+
+      const bar = document.getElementById('restTimerBar');
+      bar.classList.remove('hidden');
+      updateTimerUI();
+
+      APP_STATE.timer.intervalId = setInterval(() => {
+        if (!APP_STATE.timer.isPaused) {
+          APP_STATE.timer.remainingSeconds--;
+          updateTimerUI();
+          if (APP_STATE.timer.remainingSeconds <= 0) {
+            stopTimer();
+          }
+        }
+      }, 1000);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function setCustomRestTime(s) {
+      startRestTimer(s);
+    }
+
+    function updateTimerUI() {
+      const rem = APP_STATE.timer.remainingSeconds;
+      const mins = Math.floor(rem / 60);
+      const secs = rem % 60;
+      const disp = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      document.getElementById('timerDisplay').innerText = disp;
+
+      const pct = Math.max(0, (rem / APP_STATE.timer.totalSeconds) * 100);
+      document.getElementById('timerProgress').style.width = `${pct}%`;
+    }
+
+    function togglePauseResumeTimer() {
+      APP_STATE.timer.isPaused = !APP_STATE.timer.isPaused;
+      const icon = document.getElementById('timerPauseIcon');
+      if (icon) {
+        icon.setAttribute('data-lucide', APP_STATE.timer.isPaused ? 'play' : 'pause');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function stopTimer() {
+      if (APP_STATE.timer.intervalId) {
+        clearInterval(APP_STATE.timer.intervalId);
+        APP_STATE.timer.intervalId = null;
+      }
+      document.getElementById('restTimerBar').classList.add('hidden');
+    }
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('Offline Service Worker registrado'))
+          .catch(err => console.log('Error registrando SW', err));
+      });
+    }
+  </script>
+</body>
+</html>
