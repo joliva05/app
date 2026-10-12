@@ -734,9 +734,12 @@
             <select class="w-full slate-input rounded-2xl px-3 py-2 text-xs" id="nuevoEjercicioMusculo">
               <option value="Pecho">Pecho</option><option value="Espalda">Espalda</option><option value="Pierna">Pierna</option><option value="Hombro">Hombro</option><option value="Bíceps">Bíceps</option><option value="Tríceps">Tríceps</option><option value="Core">Core</option>
             </select>
-            <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs text-center" id="nuevoEjercicioSeries" type="number" placeholder="Nº Series (Meta)" value="4" min="1"/>
+            <input class="w-full slate-input rounded-2xl px-3 py-2 text-xs text-center" id="nuevoEjercicioSeries" type="number" placeholder="Nº Series (Meta)" min="1"/>
           </div>
-          <button class="w-full py-2.5 rounded-full btn-primary font-bold text-xs uppercase hover:opacity-90 transition" onclick="crearNuevoEjercicioCatalogo()">Guardar Ejercicio</button>
+          <div class="flex gap-2">
+            <button class="hidden px-4 py-2.5 rounded-full slate-item text-xs font-semibold hover:opacity-80 transition" id="btnCancelarEdicionEx" onclick="cancelarEdicionEjercicio()">Cancelar</button>
+            <button class="w-full py-2.5 rounded-full btn-primary font-bold text-xs uppercase hover:opacity-90 transition" id="btnGuardarEjercicio" onclick="crearNuevoEjercicioCatalogo()">Guardar Ejercicio</button>
+          </div>
         </div>
       </div>
       <div class="pt-2 border-t border-[var(--app-border)] text-right">
@@ -868,6 +871,8 @@
 
   <script>
     let autoReturnTimer = null;
+    let editingExIdx = null;
+
     function getTodayStr() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1361,10 +1366,96 @@
 
     function openModalGestion() { document.getElementById('modalGestion').classList.remove('hidden'); renderGestionRutinas(); renderGestionEjercicios(); if (window.lucide) lucide.createIcons(); }
     function closeModalGestion() { document.getElementById('modalGestion').classList.add('hidden'); }
-    function switchGestionTab(tab) { const active = "py-2 rounded-full btn-primary shadow-sm transition"; const inactive = "py-2 rounded-full opacity-60 hover:opacity-100 transition"; if (tab === 'rutinas') { document.getElementById('tabBtnGestionRutinas').className = active; document.getElementById('tabBtnGestionEjercicios').className = inactive; document.getElementById('sectionGestionRutinas').classList.remove('hidden'); document.getElementById('sectionGestionEjercicios').classList.add('hidden'); } else { document.getElementById('tabBtnGestionEjercicios').className = active; document.getElementById('tabBtnGestionRutinas').className = inactive; document.getElementById('sectionGestionEjercicios').classList.remove('hidden'); document.getElementById('sectionGestionRutinas').classList.add('hidden'); } }
-    function renderGestionRutinas() { document.getElementById('listaRutinasGestion').innerHTML = APP_STATE.routines.map(r => `<div class="p-3 rounded-2xl slate-item border ${r.id === APP_STATE.selectedRoutineId ? '!border-emerald-500' : ''} flex items-center justify-between text-xs mb-2 transition-all"><div class="flex-1 pr-2 cursor-pointer" onclick="seleccionarRutinaDesdeModal('${r.id}')"><div class="flex items-center gap-1.5 mb-0.5"><h4 class="font-bold ${r.id === APP_STATE.selectedRoutineId ? 'text-emerald-600 dark:text-emerald-400' : ''}">${r.name}</h4></div><p class="text-[11px] opacity-60">${r.desc} (${r.exercises.length} ejercicios)</p></div><button onclick="eliminarRutina('${r.id}')" class="p-1.5 opacity-60 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div>`).join(''); if (window.lucide) lucide.createIcons(); }
-    function renderGestionEjercicios() { const r = getCurrentRoutine(); document.getElementById('listaEjerciciosCatalogo').innerHTML = `<div class="mb-3 pb-2 border-b border-[var(--app-border)] text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Añadiendo a: <span>${r.name}</span></div>` + (!r.exercises.length ? `<p class="text-xs opacity-60 text-center py-4">Sin ejercicios.</p>` : r.exercises.map((c, idx) => `<div class="p-2.5 rounded-xl slate-item flex items-center justify-between text-xs mb-2 border-transparent"><div><span class="font-medium">${c.name}</span><span class="text-[10px] opacity-60 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 ml-2">${c.muscle}</span></div><button onclick="eliminarEjercicio(${idx})" class="p-1 opacity-60 text-red-500"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button></div>`).join('')); if (window.lucide) lucide.createIcons(); }
     
+    function switchGestionTab(tab) { 
+      editingExIdx = null;
+      document.getElementById('nuevoEjercicioNombre').value = '';
+      document.getElementById('nuevoEjercicioSeries').value = '';
+
+      const active = "py-2 rounded-full btn-primary shadow-sm transition"; 
+      const inactive = "py-2 rounded-full opacity-60 hover:opacity-100 transition"; 
+      if (tab === 'rutinas') { 
+        document.getElementById('tabBtnGestionRutinas').className = active; 
+        document.getElementById('tabBtnGestionEjercicios').className = inactive; 
+        document.getElementById('sectionGestionRutinas').classList.remove('hidden'); 
+        document.getElementById('sectionGestionEjercicios').classList.add('hidden'); 
+      } else { 
+        document.getElementById('tabBtnGestionEjercicios').className = active; 
+        document.getElementById('tabBtnGestionRutinas').className = inactive; 
+        document.getElementById('sectionGestionEjercicios').classList.remove('hidden'); 
+        document.getElementById('sectionGestionRutinas').classList.add('hidden'); 
+        renderGestionEjercicios();
+      } 
+    }
+
+    function renderGestionRutinas() { document.getElementById('listaRutinasGestion').innerHTML = APP_STATE.routines.map(r => `<div class="p-3 rounded-2xl slate-item border ${r.id === APP_STATE.selectedRoutineId ? '!border-emerald-500' : ''} flex items-center justify-between text-xs mb-2 transition-all"><div class="flex-1 pr-2 cursor-pointer" onclick="seleccionarRutinaDesdeModal('${r.id}')"><div class="flex items-center gap-1.5 mb-0.5"><h4 class="font-bold ${r.id === APP_STATE.selectedRoutineId ? 'text-emerald-600 dark:text-emerald-400' : ''}">${r.name}</h4></div><p class="text-[11px] opacity-60">${r.desc} (${r.exercises.length} ejercicios)</p></div><button onclick="eliminarRutina('${r.id}')" class="p-1.5 opacity-60 text-red-500"><i class="w-4 h-4" data-lucide="trash-2"></i></button></div>`).join(''); if (window.lucide) lucide.createIcons(); }
+    
+    function renderGestionEjercicios() { 
+      const r = getCurrentRoutine(); 
+      const container = document.getElementById('listaEjerciciosCatalogo');
+      container.innerHTML = `<div class="mb-3 pb-2 border-b border-[var(--app-border)] text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Añadiendo a: <span>${r.name}</span></div>` + 
+      (!r.exercises.length ? `<p class="text-xs opacity-60 text-center py-4">Sin ejercicios.</p>` : 
+      r.exercises.map((c, idx) => `<div class="p-2.5 rounded-xl slate-item flex flex-col gap-2 text-xs mb-2 border-transparent transition-all ${editingExIdx === idx ? 'ring-1 ring-emerald-500 bg-emerald-500/5' : ''}">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="font-medium">${c.name}</span>
+              <span class="text-[10px] opacity-60 px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 ml-2">${c.muscle}</span>
+              <span class="text-[10px] opacity-60 block mt-0.5">${c.targetSets} series · Meta</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="moverEjercicio(${idx}, -1)" class="p-1.5 slate-card rounded-lg hover:opacity-80 disabled:opacity-30 transition" ${idx === 0 ? 'disabled' : ''}><i class="w-3.5 h-3.5" data-lucide="arrow-up"></i></button>
+              <button onclick="moverEjercicio(${idx}, 1)" class="p-1.5 slate-card rounded-lg hover:opacity-80 disabled:opacity-30 transition" ${idx === r.exercises.length - 1 ? 'disabled' : ''}><i class="w-3.5 h-3.5" data-lucide="arrow-down"></i></button>
+              <button onclick="prepararEdicionEjercicio(${idx})" class="p-1.5 slate-card rounded-lg hover:opacity-80 text-blue-500 transition"><i class="w-3.5 h-3.5" data-lucide="pencil"></i></button>
+              <button onclick="eliminarEjercicio(${idx})" class="p-1.5 slate-card rounded-lg hover:opacity-80 text-red-500 transition"><i class="w-3.5 h-3.5" data-lucide="trash-2"></i></button>
+            </div>
+          </div>
+        </div>`).join('')); 
+
+      const btnGuardar = document.getElementById('btnGuardarEjercicio');
+      const btnCancelar = document.getElementById('btnCancelarEdicionEx');
+      if(btnGuardar) {
+         btnGuardar.innerText = editingExIdx !== null ? 'Actualizar Ejercicio' : 'Guardar Ejercicio';
+         btnGuardar.className = editingExIdx !== null ? 'w-full py-2.5 rounded-full bg-emerald-500 text-white font-bold text-xs uppercase hover:opacity-90 transition' : 'w-full py-2.5 rounded-full btn-primary font-bold text-xs uppercase hover:opacity-90 transition';
+      }
+      if(btnCancelar) {
+         btnCancelar.classList.toggle('hidden', editingExIdx === null);
+      }
+
+      if (window.lucide) lucide.createIcons(); 
+    }
+    
+    function moverEjercicio(idx, dir) {
+      const r = getCurrentRoutine();
+      if (idx + dir < 0 || idx + dir >= r.exercises.length) return;
+      const temp = r.exercises[idx];
+      r.exercises[idx] = r.exercises[idx + dir];
+      r.exercises[idx + dir] = temp;
+      if (editingExIdx === idx) editingExIdx = idx + dir;
+      else if (editingExIdx === idx + dir) editingExIdx = idx;
+      persistData();
+      sincronizarRutinaEnNube(r);
+      renderGestionEjercicios();
+      renderPreviewRoutine();
+    }
+
+    function prepararEdicionEjercicio(idx) {
+      editingExIdx = idx;
+      const r = getCurrentRoutine();
+      const ex = r.exercises[idx];
+      document.getElementById('nuevoEjercicioNombre').value = ex.name;
+      document.getElementById('nuevoEjercicioMusculo').value = ex.muscle;
+      document.getElementById('nuevoEjercicioSeries').value = ex.targetSets;
+      renderGestionEjercicios();
+      document.getElementById('nuevoEjercicioNombre').focus();
+    }
+
+    function cancelarEdicionEjercicio() {
+      editingExIdx = null;
+      document.getElementById('nuevoEjercicioNombre').value = '';
+      document.getElementById('nuevoEjercicioSeries').value = '';
+      renderGestionEjercicios();
+    }
+
     function sincronizarRutinaEnNube(routine) {
       addToSyncQueue('rutinas', {
         id: routine.id,
@@ -1387,13 +1478,29 @@
     }
 
     function crearNuevoEjercicioCatalogo() {
-      const n = document.getElementById('nuevoEjercicioNombre').value.trim(); const m = document.getElementById('nuevoEjercicioMusculo').value; const s = parseInt(document.getElementById('nuevoEjercicioSeries').value) || 4; if (!n) return;
+      const n = document.getElementById('nuevoEjercicioNombre').value.trim(); 
+      const m = document.getElementById('nuevoEjercicioMusculo').value; 
+      const rawS = document.getElementById('nuevoEjercicioSeries').value;
+      const s = parseInt(rawS) || 4; 
+      if (!n) return;
+      
       const r = getCurrentRoutine();
-      r.exercises.push({ name: n, targetSets: s, muscle: m, defaultWeight: 40, defaultReps: 10 });
+
+      if (editingExIdx !== null) {
+        r.exercises[editingExIdx].name = n;
+        r.exercises[editingExIdx].muscle = m;
+        r.exercises[editingExIdx].targetSets = s;
+        editingExIdx = null;
+      } else {
+        r.exercises.push({ name: n, targetSets: s, muscle: m, defaultWeight: 40, defaultReps: 10 });
+      }
+
       persistData();
       sincronizarRutinaEnNube(r);
       document.getElementById('nuevoEjercicioNombre').value = '';
-      renderPreviewRoutine(); renderGestionEjercicios();
+      document.getElementById('nuevoEjercicioSeries').value = '';
+      renderPreviewRoutine(); 
+      renderGestionEjercicios();
     }
 
     function seleccionarRutinaDesdeModal(id) { APP_STATE.selectedRoutineId = id; persistData(); renderRoutineCards(); renderPreviewRoutine(); renderGestionRutinas(); renderGestionEjercicios(); switchGestionTab('ejercicios'); }
