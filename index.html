@@ -132,6 +132,11 @@
     #quickActionCard, #modalMetas > div, #modalGestion > div, #modalCrearAlimento > div, #modalConfirmFinalizar > div, #modalGestionAlimentos > div, #modalConfigComidas > div, #modalSync > div, #modalMacrosRapidos > div { 
       animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; 
     }
+  
+    #topHeader { padding-top: calc(0.75rem + env(safe-area-inset-top, 0px)) !important; }
+    @keyframes okflash { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.5); } 100% { box-shadow: 0 0 0 14px rgba(16,185,129,0); } }
+    .okflash { animation: okflash .6s ease-out; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   </style>
 </head>
 <body class="font-sans antialiased min-h-screen select-none pb-60">
@@ -1517,5 +1522,201 @@
     function togglePauseResumeTimer() { APP_STATE.timer.isPaused = !APP_STATE.timer.isPaused; const icon = document.getElementById('timerPauseIcon'); if (icon) { icon.setAttribute('data-lucide', APP_STATE.timer.isPaused ? 'play' : 'pause'); if (window.lucide) lucide.createIcons(); } }
     function stopTimer() { if (APP_STATE.timer.intervalId) { clearInterval(APP_STATE.timer.intervalId); APP_STATE.timer.intervalId = null; } document.getElementById('restTimerBar').classList.add('hidden'); }
   </script>
+<script>
+/* FitPulse v3.11 — capa de mejoras (se carga tras el script principal) */
+(() => {
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wrap = (n, f) => { const o = window[n]; window[n] = function (...a) { const r = o.apply(this, a); f(...a); return r; }; };
+
+  // lucide: agrupa las llamadas por frame (antes se re-escaneaba el DOM en cada render)
+  if (window.lucide) { const c = lucide.createIcons.bind(lucide); let q = 0; lucide.createIcons = o => { if (q) return; q = requestAnimationFrame(() => { q = 0; c(o); }); }; }
+
+  // Háptico: Android vibra; iOS 17.4+ responde a un <input switch>
+  const sw = document.createElement('label');
+  sw.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+  sw.innerHTML = '<input type="checkbox" switch>';
+  document.body.appendChild(sw);
+  const PAT = { tick: [8], ok: [12, 40, 18], warn: [30], pr: [15, 50, 15, 50, 30] };
+  const haptic = k => { if (navigator.vibrate) navigator.vibrate(PAT[k] || PAT.tick); else sw.click(); };
+  document.addEventListener('pointerdown', e => { if (e.target.closest('button')) haptic('tick'); }, { passive: true });
+  ['registrarComida', 'guardarMacrosRapidos'].forEach(n => wrap(n, () => haptic('ok')));
+  ['eliminarComida', 'eliminarSerieDeSesion', 'eliminarEjercicio', 'eliminarRutina'].forEach(n => wrap(n, () => haptic('warn')));
+
+  function toast(t) {
+    const e = document.createElement('div'); e.textContent = t; e.className = 'slate-card';
+    e.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 4.5rem);left:50%;transform:translate(-50%,-12px);opacity:0;z-index:99999999;padding:.6rem 1rem;border-radius:9999px;font-size:12px;font-weight:700;transition:.3s cubic-bezier(.16,1,.3,1)';
+    document.body.appendChild(e);
+    requestAnimationFrame(() => { e.style.opacity = 1; e.style.transform = 'translate(-50%,0)'; });
+    setTimeout(() => { e.style.opacity = 0; setTimeout(() => e.remove(), 300); }, 2200);
+  }
+
+  // Contador de kcal animado
+  const oU = updateNutritionDashboard;
+  window.updateNutritionDashboard = function () {
+    const el = $('dashKcalTotal'), from = +el.textContent || 0;
+    oU(); const to = +el.textContent || 0;
+    if (reduce || from === to) return;
+    const t0 = performance.now();
+    (function f(t) { const k = Math.min(1, (t - t0) / 450); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0);
+  };
+
+  // FIX: el índice del buscador apuntaba al catálogo completo, no a la lista filtrada
+  let fm = [];
+  wrap('onFoodSearchInput', v => { const q = (v || '').toLowerCase().trim(); fm = APP_STATE.alimentos_base.filter(a => a.name.toLowerCase().includes(q)); });
+  window.selectFoodItemByIndex = i => { selectFoodItem(fm[i] || APP_STATE.alimentos_base[i]); $('foodSuggestions').classList.add('hidden'); };
+
+  // FIX: el nº de serie arrastraba el del ejercicio anterior; + precarga de la última serie y pista "última vez"
+  const isSel = s => s.date === APP_STATE.selectedDate || (!s.date && APP_STATE.selectedDate === getTodayStr());
+  const oR = renderActiveExerciseView;
+  window.renderActiveExerciseView = function () {
+    const A = APP_STATE.activeSession, ex = getCurrentRoutine().exercises[A.exerciseIndex];
+    const mine = APP_STATE.series_entreno.filter(s => s.exerciseName === ex.name);
+    const today = mine.filter(isSel), prev = mine.filter(s => !isSel(s));
+    A.currentSetNum = today.length + 1;
+    oR();
+    const last = today[today.length - 1] || prev[prev.length - 1];
+    if (last) { $('activeInputWeight').value = last.weight; $('activeInputReps').value = last.reps; }
+    const d = prev.length ? prev[prev.length - 1].date : null;
+    const top = d && prev.filter(s => s.date === d).sort((a, b) => b.weight - a.weight)[0];
+    let h = $('lastHint');
+    if (!h) { h = document.createElement('p'); h.id = 'lastHint'; h.className = 'text-[11px] opacity-60 mt-1'; $('activeSetBadge').parentElement.after(h); }
+    h.textContent = top ? `Última vez (${d.slice(8)}/${d.slice(5, 7)}): ${top.weight} kg × ${top.reps}` : 'Primera vez con este ejercicio';
+  };
+
+  // Récords: 1RM estimado (Epley) mayor que cualquier serie previa del ejercicio
+  wrap('completarSerieActiva', () => {
+    const all = APP_STATE.series_entreno, s = all[all.length - 1]; if (!s) return;
+    const e = x => x.weight * (1 + x.reps / 30), prev = all.slice(0, -1).filter(x => x.exerciseName === s.exerciseName);
+    haptic('ok');
+    const p = $('panelActiveWorkoutSession'); p.classList.remove('okflash'); void p.offsetWidth; p.classList.add('okflash');
+    if (prev.length && e(s) > Math.max(...prev.map(e))) { haptic('pr'); toast('🏆 Récord en ' + s.exerciseName); }
+  });
+
+  // FIX: el descanso se calculaba con setInterval (iOS lo congela con la pantalla bloqueada). Ahora usa hora de fin.
+  let end = 0;
+  const left = () => Math.max(0, Math.ceil((end - Date.now()) / 1000));
+  function step() {
+    const T = APP_STATE.timer; if (T.isPaused || !T.intervalId) return;
+    const r = left(); if (r !== T.remainingSeconds) { T.remainingSeconds = r; updateTimerUI(); }
+    if (r <= 0) { haptic('pr'); stopTimer(); }
+  }
+  window.startRestTimer = (s = 90) => {
+    stopTimer(); const T = APP_STATE.timer;
+    T.totalSeconds = s; T.remainingSeconds = s; T.isPaused = false; end = Date.now() + s * 1000;
+    $('restTimerBar').classList.remove('hidden'); updateTimerUI();
+    T.intervalId = setInterval(step, 250); lucide.createIcons();
+  };
+  window.togglePauseResumeTimer = () => {
+    const T = APP_STATE.timer;
+    if (T.isPaused) { end = Date.now() + T.remainingSeconds * 1000; T.isPaused = false; }
+    else { T.remainingSeconds = left(); T.isPaused = true; }
+    const i = $('timerPauseIcon'); if (i) { i.setAttribute('data-lucide', T.isPaused ? 'play' : 'pause'); lucide.createIcons(); }
+  };
+
+  // FIX: cola de sync sin guarda de concurrencia; ahora una sola pasada a la vez y reintento si entraron tareas nuevas
+  window.processSyncQueue = async function () {
+    const S = APP_STATE;
+    if (S.isSyncing || !navigator.onLine || !S.sync.url || !S.sync.key || !S.syncQueue.length) { updateSyncBadge(); return; }
+    S.isSyncing = true; updateSyncBadge();
+    const batch = [...S.syncQueue]; let offline = false;
+    for (const it of batch) {
+      try {
+        const H = { apikey: S.sync.key, Authorization: `Bearer ${S.sync.key}` };
+        const r = it.method === 'DELETE'
+          ? await fetch(`${S.sync.url}/rest/v1/${it.table}?${it.filter}`, { method: 'DELETE', headers: H })
+          : await fetch(`${S.sync.url}/rest/v1/${it.table}`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...H, Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(it.payload) });
+        if (r.ok) { S.syncQueue = S.syncQueue.filter(q => q.id !== it.id); persistData(); } else console.error('Supabase', r.status, await r.text());
+      } catch (e) { offline = true; break; }
+    }
+    S.isSyncing = false; updateSyncBadge();
+    if (!offline && S.syncQueue.some(q => !batch.some(b => b.id === q.id))) processSyncQueue();
+  };
+
+  // FIX: si la app queda abierta pasada la medianoche, "hoy" se quedaba en el día anterior
+  let day = getTodayStr();
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    step();
+    if (getTodayStr() !== day) { const wasToday = APP_STATE.selectedDate === day; day = getTodayStr(); if (wasToday) APP_STATE.selectedDate = day; renderWeekSelector(); selectDate(APP_STATE.selectedDate); }
+  });
+
+  // SORPRESA: tendencia 7 días en canvas (kcal vs meta / volumen en kg)
+  let mode = 'kcal';
+  const card = document.createElement('div');
+  card.className = 'slate-card rounded-3xl p-4 space-y-3';
+  card.innerHTML = '<div class="flex items-center justify-between"><h3 class="text-xs font-semibold uppercase tracking-wider opacity-80">Últimos 7 días</h3><div class="flex gap-1 text-[11px] font-semibold" id="trendTabs"><button data-m="kcal" class="px-3 py-1 rounded-full">Kcal</button><button data-m="vol" class="px-3 py-1 rounded-full">Volumen</button></div></div><canvas id="trendCanvas" class="w-full" style="height:120px"></canvas><p class="text-[11px] opacity-60" id="trendNote"></p>';
+  $('weekSelectorContainerHistorial').after(card);
+  $('trendTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { mode = b.dataset.m; drawTrend(); } });
+
+  function drawTrend() {
+    const c = $('trendCanvas'); if (!c || !c.offsetWidth) return;
+    document.querySelectorAll('#trendTabs button').forEach(b => { b.className = 'px-3 py-1 rounded-full ' + (b.dataset.m === mode ? 'btn-primary' : 'slate-item opacity-70'); });
+    const dpr = devicePixelRatio || 1, W = c.offsetWidth, H = 120; c.width = W * dpr; c.height = H * dpr;
+    const g = c.getContext('2d'); g.scale(dpr, dpr);
+    const base = new Date(APP_STATE.selectedDate + 'T12:00:00'), days = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(base); d.setDate(d.getDate() - i); days.push(d); }
+    const ds = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, td = getTodayStr();
+    const vals = days.map(d => { const k = ds(d); return mode === 'kcal' ? APP_STATE.comidas_diarias.filter(m => (m.date || td) === k).reduce((a, m) => a + m.kcal, 0) : APP_STATE.series_entreno.filter(s => (s.date || td) === k).reduce((a, s) => a + s.weight * s.reps, 0); });
+    const goal = mode === 'kcal' ? APP_STATE.goals.kcal : 0, max = Math.max(goal, ...vals, 1) * 1.1;
+    const cs = getComputedStyle(document.documentElement), fg = cs.getPropertyValue('--text-main').trim(), mu = cs.getPropertyValue('--text-muted').trim(), bw = W / 7;
+    g.font = '10px Inter, sans-serif'; g.textAlign = 'center';
+    vals.forEach((v, i) => {
+      const h = Math.max((H - 22) * v / max, 2), x = i * bw + bw * .2, y = H - 16 - h;
+      g.globalAlpha = i === 6 ? 1 : .45; g.fillStyle = i === 6 ? fg : mu; g.beginPath();
+      g.roundRect ? g.roundRect(x, y, bw * .6, h, 6) : g.rect(x, y, bw * .6, h); g.fill(); g.globalAlpha = 1;
+      g.fillStyle = mu; g.fillText('LMXJVSD'[(days[i].getDay() + 6) % 7], i * bw + bw / 2, H - 3);
+    });
+    if (goal) { const y = H - 16 - (H - 22) * goal / max; g.setLineDash([4, 4]); g.strokeStyle = mu; g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); g.setLineDash([]); }
+    const nz = vals.filter(v => v > 0);
+    $('trendNote').textContent = nz.length ? `Media: ${Math.round(nz.reduce((a, b) => a + b, 0) / nz.length)} ${mode === 'kcal' ? 'kcal/día' : 'kg de volumen/día'} · ${nz.length}/7 días con datos` : 'Sin datos en estos 7 días';
+  }
+  wrap('updateHistorialSummary', drawTrend);
+  wrap('toggleTheme', () => setTimeout(drawTrend, 0));
+  addEventListener('resize', drawTrend);
+
+  // ---- v3.12: DELETE en la nube + subida inicial ----
+  const uid = () => Date.now() + Math.random().toString(36).substr(2, 5);
+  function qDel(table, col, val) {
+    const S = APP_STATE; if (!S.sync.url || !S.sync.key) return;
+    // quita de la cola cualquier POST pendiente de ese registro para que no "resucite"
+    S.syncQueue = S.syncQueue.map(q => {
+      if (q.table !== table || q.method === 'DELETE') return q;
+      if (Array.isArray(q.payload)) return { ...q, payload: q.payload.filter(x => x[col] !== val) };
+      return q.payload[col] === val ? null : q;
+    }).filter(q => q && (q.method === 'DELETE' || !Array.isArray(q.payload) || q.payload.length));
+    S.syncQueue.push({ id: uid(), table, method: 'DELETE', filter: `${col}=eq.${encodeURIComponent(val)}` });
+    persistData(); updateSyncBadge(); processSyncQueue();
+  }
+  const pre = (n, snap, after) => { const o = window[n]; window[n] = function (...a) { const s = snap(...a); const r = o.apply(this, a); after(s, ...a); return r; }; };
+  wrap('eliminarComida', id => qDel('comidas_log', 'id', id));
+  wrap('eliminarSerieDeSesion', id => qDel('series_log', 'id', id));
+  pre('eliminarRutina', () => APP_STATE.routines.length, (n, id) => { if (APP_STATE.routines.length < n) qDel('rutinas', 'id', id); });
+  pre('eliminarAlimentoBase', i => ({ n: APP_STATE.alimentos_base.length, name: (APP_STATE.alimentos_base[i] || {}).name }), (s) => { if (s.name && APP_STATE.alimentos_base.length < s.n) qDel('alimentos_base', 'name', s.name); });
+
+  const chunks = (a, n = 200) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
+  window.subirTodo = function () {
+    const S = APP_STATE, td = getTodayStr(); if (!S.sync.url || !S.sync.key) return 0;
+    const jobs = [
+      ['alimentos_base', S.alimentos_base.map(a => ({ name: a.name, unit: a.unit, base_qty: a.baseQty ?? a.base_qty ?? (a.unit === 'g' ? 100 : 1), kcal: a.kcal, prot: a.prot, carb: a.carb, gras: a.gras }))],
+      ['rutinas', S.routines.map(r => ({ id: r.id, name: r.name, desc_text: r.desc, exercises: r.exercises }))],
+      ['comidas_log', S.comidas_diarias.map(m => ({ id: m.id, name: m.name, meal_type: m.meal_type ?? m.mealType ?? null, qty: m.qty, unit: m.unit, kcal: m.kcal, prot: m.prot, carb: m.carb, gras: m.gras, date_str: m.date_str ?? m.date ?? td, time_str: m.time_str ?? m.time ?? null }))],
+      ['series_log', S.series_entreno.map(s => ({ id: s.id, routine_name: s.routine_name ?? s.routineName ?? null, exercise_name: s.exercise_name ?? s.exerciseName, muscle: s.muscle ?? null, set_num: s.set_num ?? s.setNum ?? null, weight: s.weight, reps: s.reps, date_str: s.date_str ?? s.date ?? td, time_str: s.time_str ?? s.time ?? null }))],
+      ['metas_usuario', [{ id: 'default', kcal: S.goals.kcal, protein: S.goals.protein, carbs: S.goals.carbs, fat: S.goals.fat }]]
+    ];
+    let n = 0;
+    jobs.forEach(([table, rows]) => chunks(rows).forEach(p => { S.syncQueue.push({ id: uid(), table, payload: p }); n++; }));
+    localStorage.setItem('fitpulse_full_sync_url', S.sync.url);
+    persistData(); updateSyncBadge(); processSyncQueue(); return n;
+  };
+  const needsFull = () => APP_STATE.sync.url && APP_STATE.sync.key && localStorage.getItem('fitpulse_full_sync_url') !== APP_STATE.sync.url;
+  const oS = saveSyncConfig;
+  window.saveSyncConfig = async function () { await oS.apply(this, arguments); if (needsFull()) { subirTodo(); toast('☁️ Subiendo tus datos a la nube'); } };
+  addEventListener('DOMContentLoaded', () => setTimeout(() => { if (needsFull()) { subirTodo(); toast('☁️ Subiendo tus datos a la nube'); } }, 1500));
+  window.resubirTodo = () => { if (!APP_STATE.sync.url) { toast('Configura la nube primero'); return; } subirTodo(); toast('☁️ Subiendo todo…'); };
+  const eb = document.querySelector('#navDrawerPanel button[onclick*="exportBackup"]');
+  if (eb) { const b = eb.cloneNode(true); b.setAttribute('onclick', 'toggleNavDrawer(false); resubirTodo();'); b.querySelector('span').textContent = 'Subir todo a la nube'; b.querySelector('i').setAttribute('data-lucide', 'refresh-cw'); eb.before(b); }
+})();
+</script>
 </body>
 </html>
